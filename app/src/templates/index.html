@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div>
+  <h1>APKSneeze CRUD</h1>
+  {% if apks|length < 1 %}
+  <p>There is nothing to buy for now.</p>
+  {% else %}
+  <table>
+    <thead>
+      <tr>
+        <th>Apk</th>
+        <th>Added</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for apk in apks %}
+      <tr>
+        <td><a href="">{{ apk.name }}</a></td>
+        <td>{{ apk.created_at.date() }}</td>
+        <td><a href="">Delete</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <form action="/" method="POST">
+    <label for="newStuff">New APK:</label>
+    <input type="text" name="name" id="newApk">
+    <button type="submit">Add</button>
+  </form>
+</div>
+{% endblock content %}

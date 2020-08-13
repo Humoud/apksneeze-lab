@@ -1,0 +1,19 @@
+version: '3'
+services:
+  flask:
+    build:
+      context: .
+      dockerfile: ./compose/flask/Dockerfile
+    image: apksneeze_web
+    env_file: ./.env/.postgres
+    ports:
+      - "5000:5000"
+    volumes:
+      - "./app/src:/app"
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/postgres/Dockerfile
+    image: apksneeze_db
+    env_file: ./.env/.postgres
