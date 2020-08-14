@@ -2,7 +2,7 @@
 from flask import render_template, request, redirect, flash
 from flask import url_for, send_from_directory
 from werkzeug.utils import secure_filename
-from .models import APK, db
+from .models import ApkFile, db
 from . import create_app
 import os
 
@@ -32,18 +32,18 @@ def index():
         # save file to disk
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         # add file name to DB
-        new_apk = APK(name=filename)
+        new_apk = ApkFile(name=filename)
         db.session.add(new_apk)
         db.session.commit()
         return redirect('/')
 
     else:
-        apks = APK.query.order_by(APK.created_at).all()
+        apks = ApkFile.query.order_by(ApkFile.created_at).all()
         return render_template('index.html', apks=apks)
 
 @app.route("/report/<id>/delete", methods=["GET"])
 def delete_report(id):
-    delete_apk = APK.query.get(id)
+    delete_apk = ApkFile.query.get(id)
     db.session.delete(delete_apk)
     db.session.commit()
     flash('Delete Report Successfuly', 'success')
@@ -54,7 +54,7 @@ def delete_report(id):
 # Reports page showing results of analysis
 @app.route('/report/<id>', methods=['GET'])
 def show_report(id):
-    apk = APK.query.get(id)
+    apk = ApkFile.query.get(id)
     return render_template('report.html', apk=apk)
 
 if __name__ == "__main__":

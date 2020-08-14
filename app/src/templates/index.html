@@ -9,9 +9,10 @@
   <thead class="thead-dark">
     <tr>
       <th>APK File</th>
+      <th>Codename</th>
       <th>Added</th>
       <th>Analyzed</th>
-      <th>Errors</th>
+      <th></th>
       <th></th>
     </tr>
   </thead>
@@ -20,8 +21,9 @@
     <tr>
       <!-- <td><a href="{{ url_for('uploaded_file', filename=apk.name) }}">{{ apk.name }}</a></td> -->
       <td><a href="{{ url_for('show_report', id=apk.id) }}">{{ apk.name }}</a></td>
+      <td>{{ apk.codename }}</td>
       <td>{{ apk.created_at.date() }}</td>
-      <td></td>
+      <td>{{ apk.analyzed }}</td>
       <td></td>
       <td><a href="{{ url_for('delete_report', id=apk.id) }}">Delete</a></td>
     </tr>

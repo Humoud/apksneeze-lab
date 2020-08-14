@@ -1,5 +1,12 @@
 version: '3'
 services:
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/postgres/Dockerfile
+    image: apksneeze_db
+    env_file: ./.env/.postgres
+
   flask:
     build:
       context: .
@@ -11,10 +18,3 @@ services:
     volumes:
       - "./app/src:/app"
       - "./app/storage:/storage"
-
-  postgres:
-    build:
-      context: .
-      dockerfile: ./compose/postgres/Dockerfile
-    image: apksneeze_db
-    env_file: ./.env/.postgres

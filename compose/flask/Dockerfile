@@ -20,14 +20,20 @@ RUN apk update \
  # psycopg2 dependencies
 && apk add --virtual build-deps gcc python3-dev musl-dev \
 && apk add postgresql-dev
- 
+
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 WORKDIR /app
-ENV FLASK_APP=app.py
-ENV FLASK_RUN_PORT=5000
-ENV FLASK_RUN_HOST=0.0.0.0
-ENV FLASK_ENV=development
+ENV FLASK_APP=app.py \
+    FLASK_RUN_PORT=5000 \
+    FLASK_RUN_HOST=0.0.0.0 \
+    FLASK_ENV=development
+
+RUN rm -rf /var/cache/apk/*
+#  flask db init
+#  flask db migrate -m "added col or whatever"
+#  flask db upgrade
+
 CMD [ "python", "-m", "flask", "run" ]
 
 # Clean-up

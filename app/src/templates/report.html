@@ -3,4 +3,5 @@
 {% block content %}
 <h1>Report</h1>
 <h3>{{ apk.name }}</h3>
+<a class="btn btn-dark" href="{{ url_for('uploaded_file', filename=apk.name) }}">Download apk</a>
 {% endblock content %}
