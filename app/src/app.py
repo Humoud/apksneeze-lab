@@ -3,7 +3,9 @@ from flask import render_template, request, redirect, flash
 from flask import url_for, send_from_directory
 from werkzeug.utils import secure_filename
 from .models import ApkFile, db
+from .codenames import codename
 from . import create_app
+import hashlib
 import os
 
 app = create_app()
@@ -30,9 +32,23 @@ def index():
         # if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         # save file to disk
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+        # calculate file hashes
+        with open(file_path, "rb") as f:
+            md5_hash = hashlib.md5()
+            sha1_hash = hashlib.sha1()
+            sha256_hash = hashlib.sha256()
+            while chunk := f.read(8192):
+                md5_hash.update(chunk)
+                sha1_hash.update(chunk)
+                sha256_hash.update(chunk)
         # add file name to DB
-        new_apk = ApkFile(name=filename)
+        new_apk = ApkFile(name=filename,
+            md5_hash=md5_hash.hexdigest(),
+            sha1_hash=sha1_hash.hexdigest(),
+            sha256_hash=sha256_hash.hexdigest(),
+            filesize=os.stat(file_path).st_size)
         db.session.add(new_apk)
         db.session.commit()
         return redirect('/')

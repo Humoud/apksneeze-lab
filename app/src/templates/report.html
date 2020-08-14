@@ -3,5 +3,27 @@
 {% block content %}
 <h1>Report</h1>
 <h3>{{ apk.name }}</h3>
-<a class="btn btn-dark" href="{{ url_for('uploaded_file', filename=apk.name) }}">Download apk</a>
+<div>
+    <table class="table table-sm">
+        <tbody>
+        <tr>
+            <th scope="row">Size (Bytes)</th>
+            <td>{{ apk.filesize }}</td>
+        </tr>
+        <tr>
+            <th scope="row">MD5</th>
+            <td>{{ apk.md5_hash }}</td>
+        </tr>
+        <tr>
+            <th scope="row">SHA1</th>
+            <td>{{ apk.sha1_hash }}</td>
+        </tr>
+        <tr>
+            <th scope="row">SHA256</th>
+            <td>{{ apk.sha256_hash }}</td>
+        </tr>
+        </tbody>
+    </table>
+    <a class="btn btn-dark" href="{{ url_for('uploaded_file', filename=apk.name) }}">Download apk</a>
+</div>
 {% endblock content %}

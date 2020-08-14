@@ -1,5 +1,6 @@
 # APK files
 *.apk
+app/src/migrations
 # ignore everything in storage directory
 app/storage/*
 # but keep the directory itself
