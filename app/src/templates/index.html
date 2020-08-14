@@ -18,7 +18,8 @@
   <tbody>
     {% for apk in apks %}
     <tr>
-      <td><a href="{{ url_for('uploaded_file', filename=apk.name) }}">{{ apk.name }}</a></td>
+      <!-- <td><a href="{{ url_for('uploaded_file', filename=apk.name) }}">{{ apk.name }}</a></td> -->
+      <td><a href="{{ url_for('show_report', id=apk.id) }}">{{ apk.name }}</a></td>
       <td>{{ apk.created_at.date() }}</td>
       <td></td>
       <td></td>

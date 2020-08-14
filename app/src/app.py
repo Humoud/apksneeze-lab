@@ -41,7 +41,7 @@ def index():
         apks = APK.query.order_by(APK.created_at).all()
         return render_template('index.html', apks=apks)
 
-@app.route("/report/<id>", methods=["GET"])
+@app.route("/report/<id>/delete", methods=["GET"])
 def delete_report(id):
     delete_apk = APK.query.get(id)
     db.session.delete(delete_apk)
@@ -52,9 +52,10 @@ def delete_report(id):
 
 ######
 # Reports page showing results of analysis
-@app.route('/report/<id>', methods=['DELETE'])
+@app.route('/report/<id>', methods=['GET'])
 def show_report(id):
-    return redirect('/')
+    apk = APK.query.get(id)
+    return render_template('report.html', apk=apk)
 
 if __name__ == "__main__":
     # app.secret_key = os.urandom(24)
