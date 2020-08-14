@@ -3,13 +3,21 @@
 
 <head>
   <meta charset="UTF-8">
+  <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.5.1.slim.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" >
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>APKSneeze</title>
 </head>
 
 <body>
+  <div class="container">
   {% block content %}{% endblock %}
+  {% for category, message in get_flashed_messages(with_categories=True) %}
+    <div class="alert alert-{{category}}">{{ message }}</div>
+  {% endfor %}
+  </div>
 </body>
 
 </html>
