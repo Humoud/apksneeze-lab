@@ -1,6 +1,39 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+    .header-fixed {
+    width: 100% 
+    }
+
+    .header-fixed > thead,
+    .header-fixed > tbody,
+    .header-fixed > thead > tr,
+    .header-fixed > tbody > tr,
+    .header-fixed > thead > tr > th,
+    .header-fixed > tbody > tr > td {
+        display: block;
+    }
+
+    .header-fixed > tbody > tr:after,
+    .header-fixed > thead > tr:after {
+        content: ' ';
+        display: block;
+        visibility: hidden;
+        clear: both;
+    }
+
+    .header-fixed > tbody {
+        overflow-y: auto;
+        height: 250px;
+    }
+
+    .header-fixed > tbody > tr > td,
+    .header-fixed > thead > tr > th {
+        width: 20%;
+        float: left;
+    }
+</style>
 <h1>Report</h1>
 <h3>{{ apk.name }}</h3>
 <div>
@@ -25,5 +58,29 @@
         </tbody>
     </table>
     <a class="btn btn-dark" href="{{ url_for('uploaded_file', filename=apk.name) }}">Download apk</a>
+</div>
+<div>
+    <table class="table table-striped header-fixed">
+        <thead>
+            <tr><thead>Packages</thead></tr>
+        </thead>
+        <tbody>
+            {% for pkg in packages %}
+            <tr>
+                <td>{{ pkg.fullname }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div>
+    <form action="/report/pkg_download" method="POST">
+    <div class="form-group">
+        <label for="exampleInputEmail1">Decompile and Download a Package</label>
+        <input type="hidden" name="id" value="{{ apk.id }}">
+        <input type="text" class="form-control" name="package" placeholder="Package name starts with">
+    </div>
+    <button type="submit" class="btn btn-primary">Download</button>
+    </form>
 </div>
 {% endblock content %}

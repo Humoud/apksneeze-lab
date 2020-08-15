@@ -4,6 +4,7 @@ from flask import url_for, send_from_directory
 from werkzeug.utils import secure_filename
 from .models import ApkFile, db
 from .codenames import codename
+from .processor import download_package
 from . import create_app
 import hashlib
 import os
@@ -19,6 +20,7 @@ def uploaded_file(filename):
 # Handle index dashboard page and files submitted for analysis
 @app.route('/', methods=['GET','POST'])
 def index():
+    # Handle new file submissions
     if request.method == 'POST':
         if 'file' not in request.files:
             flash('No file part', 'warning')
@@ -36,24 +38,22 @@ def index():
         file.save(file_path)
         # calculate file hashes
         with open(file_path, "rb") as f:
-            md5_hash = hashlib.md5()
-            sha1_hash = hashlib.sha1()
-            sha256_hash = hashlib.sha256()
-            while chunk := f.read(8192):
-                md5_hash.update(chunk)
-                sha1_hash.update(chunk)
-                sha256_hash.update(chunk)
+            data = f.read()
+            md5_hash = hashlib.md5(data).hexdigest()
+            sha1_hash = hashlib.sha1(data).hexdigest()
+            sha256_hash = hashlib.sha256(data).hexdigest()
         # add file name to DB
         new_apk = ApkFile(name=filename,
-            md5_hash=md5_hash.hexdigest(),
-            sha1_hash=sha1_hash.hexdigest(),
-            sha256_hash=sha256_hash.hexdigest(),
+            md5_hash=md5_hash,
+            sha1_hash=sha1_hash,
+            sha256_hash=sha256_hash,
             filesize=os.stat(file_path).st_size)
         db.session.add(new_apk)
         db.session.commit()
         return redirect('/')
 
     else:
+
         apks = ApkFile.query.order_by(ApkFile.created_at).all()
         return render_template('index.html', apks=apks)
 
@@ -65,13 +65,27 @@ def delete_report(id):
     flash('Delete Report Successfuly', 'success')
     return redirect('/')
 
-
 ######
 # Reports page showing results of analysis
 @app.route('/report/<id>', methods=['GET'])
 def show_report(id):
     apk = ApkFile.query.get(id)
-    return render_template('report.html', apk=apk)
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], apk.name)
+    # packages = process_apk(file_path)
+    packages =[]
+    return render_template('report.html', apk=apk, packages=packages)
+
+@app.route('/report/pkg_download', methods=['POST'])
+def pkg_download():
+    id = request.form.get('id')
+    package = request.form.get('package')
+    apk = ApkFile.query.get(id)
+    apk_file_path = os.path.join(app.config['UPLOAD_FOLDER'], apk.name)
+    download_path = os.path.join(app.config['UPLOAD_FOLDER'], apk.codename.replace(' ','_'))
+    os.mkdir(download_path)
+    download_package(package, apk_file_path, download_path)
+    # return redirect('/')
+    return redirect("/uploads/{}.zip".format(apk.codename.replace(' ','_')))
 
 if __name__ == "__main__":
     # app.secret_key = os.urandom(24)

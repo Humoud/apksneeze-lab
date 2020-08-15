@@ -13,8 +13,16 @@ services:
       dockerfile: ./compose/flask/Dockerfile
     image: apksneeze_web
     env_file: ./.env/.postgres
+    environment:
+      - JVM_OPTS=-Xms2g -Xmx2g
     ports:
       - "5000:5000"
     volumes:
       - "./app/src:/app"
       - "./app/storage:/storage"
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 3G
