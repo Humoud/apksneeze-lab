@@ -2,11 +2,12 @@
 from flask import render_template, request, redirect, flash
 from flask import url_for, send_from_directory
 from werkzeug.utils import secure_filename
-from .models import ApkFile, db
+from .models import ApkFile, db, DString, Report
 from .codenames import codename
 from .processor import download_package
 from . import create_app
 import hashlib
+import yara
 import os
 
 app = create_app()
@@ -82,10 +83,27 @@ def pkg_download():
     apk = ApkFile.query.get(id)
     apk_file_path = os.path.join(app.config['UPLOAD_FOLDER'], apk.name)
     download_path = os.path.join(app.config['UPLOAD_FOLDER'], apk.codename.replace(' ','_'))
-    os.mkdir(download_path)
-    download_package(package, apk_file_path, download_path)
+    # os.mkdir(download_path)
+    download_package(apk, package, apk_file_path, download_path)
     # return redirect('/')
     return redirect("/uploads/{}.zip".format(apk.codename.replace(' ','_')))
+
+@app.route('/run_yara/<id>', methods=['GET'])
+def run_yara(id):
+    apk = ApkFile.query.get(id)
+    files_loc = os.path.join(app.config['UPLOAD_FOLDER'], apk.codename.replace(' ','_'))
+    rules_path = "/storage/yara_rules/apksneeze.yar"
+    rules = yara.compile(rules_path)
+    scans = []
+    for root, dirs, files in os.walk(files_loc):
+     for file in files:
+        with open(os.path.join(root, file), "rb") as f:
+            matches = rules.match(data=f.read())
+        scans.append([os.path.join(root, file), matches])
+    return render_template('yara.html', apk=apk, yara_scans=scans)
+
+@app.route('/strings/<id>', methods=['GET'])
+def run_strings(id):
 
 if __name__ == "__main__":
     # app.secret_key = os.urandom(24)

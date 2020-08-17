@@ -1,5 +1,5 @@
-FROM openjdk:15-jdk-slim-buster
-ENV DEX2JAR_VERSION=2.0 \
+FROM openjdk:16-jdk-alpine3.12
+ENV JADX_VERSION=1.1.0 \
     APKTOOL_VERSION=2.4.1 \
     FLASK_APP=app.py \
     FLASK_RUN_PORT=5000 \
@@ -8,30 +8,23 @@ ENV DEX2JAR_VERSION=2.0 \
 
 COPY requirements.txt .
 
-RUN apt update \
+RUN apk update \
     # psycopg2 dependencies
-    && apt install build-essential git cmake wget unzip -y \
+    && apk add --virtual build-deps g++ autoconf build-base binutils file libgcc libtool linux-headers ninja tar libstdc++ gcc make cmake git python3-dev musl-dev wget unzip \
     # postgresql, python3, and pip for flask app
-    && apt install python3 python3-pip libpq-dev python3-dev -y\
+    && apk add postgresql-dev python3 py3-pip\
+    # YARA
+    # && apk add yara\
     ## Dex2Jar or jadx # 
-    && wget https://github.com/skylot/jadx/releases/download/v1.1.0/jadx-1.1.0.zip -O /tmp/jadx-1.1.0.zip \
-    && unzip /tmp/jadx-1.1.0.zip -d /jadx/ && chmod +x /jadx/bin/* \
-    # && wget https://github.com/pxb1988/dex2jar/releases/download/2.0/dex-tools-${DEX2JAR_VERSION}.zip -O /tmp/dex2jar-${DEX2JAR_VERSION}.zip \
-    # && unzip /tmp/dex2jar-${DEX2JAR_VERSION}.zip -d /tmp/ \
-    # && mv /tmp/dex2jar-${DEX2JAR_VERSION}/* /usr/local/bin/ \
-    # && chmod a+x /usr/local/bin/*.sh \
-    ## APKTool
-    # && wget https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool -O /usr/local/bin/apktool \
-    # && wget https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_${APKTOOL_VERSION}.jar -O /usr/local/bin/apktool.jar \
-    # && chmod +x /usr/local/bin/apktool.jar /usr/local/bin/apktool \
-    # Python requirements.txt
-    && python3 -m pip install -r requirements.txt \
+    && wget https://github.com/skylot/jadx/releases/download/v1.1.0/jadx-${JADX_VERSION}.zip -O /tmp/jadx-${JADX_VERSION}.zip \
+    && unzip /tmp/jadx-${JADX_VERSION}.zip -d /jadx/ && chmod +x /jadx/bin/* \
+    && pip install -r requirements.txt \
     # Install pyjadx
     # && git clone https://github.com/romainthomas/pyjadx.git /tmp/pyjadx \
     # && cd /tmp/pyjadx && python3 ./setup.py install \
     # Cleanup
-    && apt -y clean && apt -y autoremove --purge && rm -rf /tmp/*
+    && apk del build-deps && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
-CMD [ "python3", "-m", "flask", "run" ]
+CMD [ "python3.8", "-m", "flask", "run" ]

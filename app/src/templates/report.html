@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<style>
+<!-- <style>
     .header-fixed {
     width: 100% 
     }
@@ -33,7 +33,7 @@
         width: 20%;
         float: left;
     }
-</style>
+</style> -->
 <h1>Report</h1>
 <h3>{{ apk.name }}</h3>
 <div>
@@ -58,7 +58,9 @@
         </tbody>
     </table>
     <a class="btn btn-dark" href="{{ url_for('uploaded_file', filename=apk.name) }}">Download apk</a>
+    <a class="btn btn-dark" href="{{ url_for('run_yara', id=apk.id) }}">Run Yara</a>
 </div>
+{% if packages %}
 <div>
     <table class="table table-striped header-fixed">
         <thead>
@@ -73,6 +75,7 @@
         </tbody>
     </table>
 </div>
+{% endif %}
 <div>
     <form action="/report/pkg_download" method="POST">
     <div class="form-group">
@@ -83,4 +86,21 @@
     <button type="submit" class="btn btn-primary">Download</button>
     </form>
 </div>
+{% if apk.report %}
+<div>
+    <table class="table table-striped">
+        <thead>
+            <tr><thead>String Hits</thead></tr>
+        </thead>
+        <tbody>
+            {% for ds in apk.report.dstrings %}
+            <tr>
+                <td>{{ ds.value }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
 {% endblock content %}

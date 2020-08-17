@@ -2,4 +2,4 @@ Flask==1.1.2
 Flask-SQLAlchemy==2.4.4
 Flask-Migrate==2.5.3
 psycopg2==2.8.5
-Pygments==2.6.1
+yara-python==4.0.2

@@ -1,3 +1,4 @@
+*.sh
 # APK files
 *.apk
 app/src/migrations
