@@ -24,11 +24,9 @@ class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     apk_file_id = db.Column(db.Integer, db.ForeignKey('apk_file.id'),
         nullable=False)
-    manifest_file = db.Column(db.String(80), nullable=False)
-    jar_file = db.Column(db.String(80), nullable=False)
-    decompiled_zip_file = db.Column(db.String(80), nullable=False)
-    jar_error = db.Column(db.Boolean, nullable=False, default=False)
-    decompile_error = db.Column(db.Boolean, nullable=False, default=False)
+    manifest_file_path = db.Column(db.Text(), nullable=True)
+    zip_file_path = db.Column(db.Text(), nullable=True)
+    ran_grep = db.Column(db.Boolean, nullable=True, default=False)
     dstrings = db.relationship('DString', backref='report')
 
 
@@ -38,4 +36,4 @@ class DString(db.Model):
     report_id = db.Column(db.Integer, db.ForeignKey('report.id'),
         nullable=False)
     value = db.Column(db.Text(), nullable=False)
-    signature = db.Column(db.Text(), nullable=False)
+    pattern = db.Column(db.Text(), nullable=False)

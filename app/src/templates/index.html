@@ -1,54 +1,27 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>APKSneeze Dashboard</h1>
-{% if apks|length < 1 %}
-<p>No APK Files Were Submitted For Analysis.</p>
-{% else %}
-<table class="table table-hover">
-  <thead class="thead-dark">
-    <tr>
-      <th>APK File</th>
-      <th>Codename</th>
-      <th>Added</th>
-      <th>Analyzed</th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for apk in apks %}
-    <tr>
-      <!-- <td><a href="{{ url_for('uploaded_file', filename=apk.name) }}">{{ apk.name }}</a></td> -->
-      <td><a href="{{ url_for('show_report', id=apk.id) }}">{{ apk.name }}</a></td>
-      <td>{{ apk.codename }}</td>
-      <td>{{ apk.created_at.date() }}</td>
-      <td>{{ apk.analyzed }}</td>
-      <td></td>
-      <td><a href="{{ url_for('delete_report', id=apk.id) }}">Delete</a></td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% endif %}
-
-<form action="/" method="POST" enctype=multipart/form-data>
-  <div class="input-group mb-3">
-    <div class="custom-file">
-      <input type="file" name="file" class="custom-file-input" id="inputGroupFile02">
-      <label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Choose file</label>
+<div class="d-flex flex-column" id="content-wrapper">
+    <div id="content">
+        <div class="container-fluid">
+            <h1 class="text-center">Upload Apk</h1>
+        </div>
+        <div class="container">
+            <form id="analysis-form" class="text-left" method="post" action="/analysis" enctype="multipart/form-data"><input type="file" required="" name="file">
+                <div class="form-check"><input name="get-code-zip" class="form-check-input" type="checkbox" id="formCheck-1"><label class="form-check-label" for="formCheck-1">Prepare decompiled code (zip file)</label></div>
+                <!-- <div class="form-check"><input name="get-jar-file" class="form-check-input" type="checkbox" id="formCheck-5"><label class="form-check-label" for="formCheck-5">Prepare Jar file</label></div> -->
+                <div class="form-check"><input name="run-grep-code" class="form-check-input" type="checkbox" id="formCheck-3"><label class="form-check-label" for="formCheck-3">Run Grep against decompiled files</label></div>
+                <div class="form-check"><input name="run-yara-apk" class="form-check-input" type="checkbox" id="formCheck-2"><label class="form-check-label" for="formCheck-2">Run Yara rules against apk file</label></div>
+                <div class="form-check"><input name="run-yara-code" class="form-check-input" type="checkbox" id="formCheck-4"><label class="form-check-label" for="formCheck-4">Run Yara rules against decompiled files</label></div>
+            </form><a id="form-btn" class="btn btn-success btn-icon-split" role="button" style="margin-top: 4px;"><span class="text-white-50 icon"><i class="fas fa-check"></i></span><span class="text-white text">Run Analysis</span></a></div>
+            <script>
+                $("a#form-btn").click(function()
+                {
+                $("#analysis-form").submit();
+                    return false;
+                });
+            </script>
     </div>
-    <div class="input-group-append">
-      <button type="submit" class="input-group-text" id="inputGroupFileAddon02">Upload</button>
-    </div>
-  </div>
-  <script>
-    $('#inputGroupFile02').on('change',function(){
-        //get the file name
-        var fileName = $(this).val();
-        //replace the "Choose a file" label
-        $(this).next('.custom-file-label').html(fileName);
-    })
-</script>
-</form>
+    {% include 'footer.html' %}
+</div>
 {% endblock content %}

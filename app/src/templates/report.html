@@ -1,106 +1,163 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html>
 
-{% block content %}
-<!-- <style>
-    .header-fixed {
-    width: 100% 
-    }
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Dashboard - apksneeze lab</title>
+    <meta name="description" content="Analyze APK files">
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
+</head>
 
-    .header-fixed > thead,
-    .header-fixed > tbody,
-    .header-fixed > thead > tr,
-    .header-fixed > tbody > tr,
-    .header-fixed > thead > tr > th,
-    .header-fixed > tbody > tr > td {
-        display: block;
-    }
+<body id="page-top">
+    <div id="wrapper">
+        <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
+            <div class="container-fluid d-flex flex-column p-0">
+                <a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="/">
+                    <div class="sidebar-brand-icon rotate-n-15"><i class="fab fa-android"></i></div>
+                    <div class="sidebar-brand-text mx-3"><span>apksneeze lab</span></div>
+                </a>
+                <hr class="sidebar-divider my-0">
+                <ul class="nav navbar-nav text-light" id="accordionSidebar">
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="/"><i class="fas fa-home"></i><span>Home</span></a><a class="nav-link" href="/"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a><a class="nav-link" href="/"><i class="fas fa-temperature-low"></i><span>Yara rules</span></a>
+                        <a
+                            class="nav-link" href="/"><i class="fas fa-sort-alpha-up"></i><span>Grep patterns</span>&nbsp;(strings)</a><a class="nav-link" href="/"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+                    <li class="nav-item" role="presentation"></li>
+                    <li class="nav-item" role="presentation"></li>
+                    <li class="nav-item" role="presentation"></li>
+                    <li class="nav-item" role="presentation"></li>
+                </ul>
+                <div class="text-center d-none d-md-inline"><button class="btn rounded-circle border-0" id="sidebarToggle" type="button"></button></div>
+            </div>
+        </nav>
+        <div class="d-flex flex-column" id="content-wrapper">
+            <div id="content">
+                <div class="container">
+                    <h1>Report</h1>
+                    <h2>{{ apk.name }}</h2><button class="btn btn-secondary" type="button">Get sample</button><button class="btn btn-primary" type="button" style="margin: 2px;">Get decompiled code</button><!-- <button class="btn btn-primary" type="button">Get Jar</button> -->
+                    <a
+                        class="btn btn-danger btn-icon-split" role="button" style="margin-left: 2px;"><span class="text-white-50 icon"><i class="fas fa-trash"></i></span><span class="text-white text">Split Button</span></a>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">Size (Bytes)</th>
+                                        <td>{{ apk.filesize }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">MD5</th>
+                                        <td>{{ apk.md5_hash }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">SHA1</th>
+                                        <td>{{ apk.sha1_hash }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">SHA256</th>
+                                        <td>{{ apk.sha256_hash }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                </div>
+                <div class="container">
+                    <h3>Manifest File</h3><button class="btn btn-primary" type="button" style="margin-bottom: 2px;">Get manifest file</button>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td>Package name</td>
+                                    <td>com.test.injured.com</td>
+                                </tr>
+                                <tr>
+                                    <td>Permissions</td>
+                                    <td>50</td>
+                                </tr>
+                                <tr></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Permissions List</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>use camera</td>
+                                </tr>
+                                <tr>
+                                    <td>access fine location</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="container">
+                    <h3>Strings</h3><button class="btn btn-primary" type="button" style="margin-bottom: 2px;">Full View (includes hits)</button>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Signature</th>
+                                    <th># of hits</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>IPv4</td>
+                                    <td>10</td>
+                                </tr>
+                                <tr>
+                                    <td>HTTP</td>
+                                    <td>50</td>
+                                </tr>
+                                <tr>
+                                    <td>HTTPS</td>
+                                    <td>100</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="container">
+                    <h3>Yara</h3><button class="btn btn-primary" type="button" style="margin-bottom: 2px;">View Full</button>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Rule match</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Bankerv9</td>
+                                </tr>
+                                <tr>
+                                    <td>RAT</td>
+                                </tr>
+                                <tr>
+                                    <td>Drill</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <footer class="bg-white sticky-footer">
+                <div class="container my-auto">
+                    <div class="text-center my-auto copyright"><span>Copyright © apksneeze lab 2020</span></div>
+                </div>
+            </footer>
+        </div><a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
+    <script src="assets/js/script.min.js"></script>
+</body>
 
-    .header-fixed > tbody > tr:after,
-    .header-fixed > thead > tr:after {
-        content: ' ';
-        display: block;
-        visibility: hidden;
-        clear: both;
-    }
-
-    .header-fixed > tbody {
-        overflow-y: auto;
-        height: 250px;
-    }
-
-    .header-fixed > tbody > tr > td,
-    .header-fixed > thead > tr > th {
-        width: 20%;
-        float: left;
-    }
-</style> -->
-<h1>Report</h1>
-<h3>{{ apk.name }}</h3>
-<div>
-    <table class="table table-sm">
-        <tbody>
-        <tr>
-            <th scope="row">Size (Bytes)</th>
-            <td>{{ apk.filesize }}</td>
-        </tr>
-        <tr>
-            <th scope="row">MD5</th>
-            <td>{{ apk.md5_hash }}</td>
-        </tr>
-        <tr>
-            <th scope="row">SHA1</th>
-            <td>{{ apk.sha1_hash }}</td>
-        </tr>
-        <tr>
-            <th scope="row">SHA256</th>
-            <td>{{ apk.sha256_hash }}</td>
-        </tr>
-        </tbody>
-    </table>
-    <a class="btn btn-dark" href="{{ url_for('uploaded_file', filename=apk.name) }}">Download apk</a>
-    <a class="btn btn-dark" href="{{ url_for('run_yara', id=apk.id) }}">Run Yara</a>
-</div>
-{% if packages %}
-<div>
-    <table class="table table-striped header-fixed">
-        <thead>
-            <tr><thead>Packages</thead></tr>
-        </thead>
-        <tbody>
-            {% for pkg in packages %}
-            <tr>
-                <td>{{ pkg.fullname }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endif %}
-<div>
-    <form action="/report/pkg_download" method="POST">
-    <div class="form-group">
-        <label for="exampleInputEmail1">Decompile and Download a Package</label>
-        <input type="hidden" name="id" value="{{ apk.id }}">
-        <input type="text" class="form-control" name="package" placeholder="Package name starts with">
-    </div>
-    <button type="submit" class="btn btn-primary">Download</button>
-    </form>
-</div>
-{% if apk.report %}
-<div>
-    <table class="table table-striped">
-        <thead>
-            <tr><thead>String Hits</thead></tr>
-        </thead>
-        <tbody>
-            {% for ds in apk.report.dstrings %}
-            <tr>
-                <td>{{ ds.value }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endif %}
-
-{% endblock content %}
+</html>
