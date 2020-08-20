@@ -4,11 +4,12 @@ from flask import url_for, send_from_directory
 from werkzeug.utils import secure_filename
 from .models import ApkFile, db, DString, Report
 from .codenames import codename
-from .processor import prepare_zip_file, run_grep
+from .processor import prepare_zip_file, run_grep, decompile_apk, analyze_manifest
 from . import create_app
 import hashlib
 import yara
 import os
+import xmltodict
 
 app = create_app()
 
@@ -96,6 +97,11 @@ def analysis():
     if request.form.get('get-code-zip'):
         zip_file_path = prepare_zip_file(file_path, decompile_loc)
         report.zip_file_path = zip_file_path
+    else:
+        decompile_apk(file_path, decompile_loc)
+    
+    analyze_manifest(report, decompile_loc)
+
     if request.form.get('run-grep-code'):
         run_grep(report, decompile_loc)
     
@@ -121,10 +127,12 @@ def delete_report(id):
 @app.route('/report/<id>', methods=['GET'])
 def show_report(id):
     apk = ApkFile.query.get(id)
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], apk.name)
-    # packages = process_apk(file_path)
-    packages =[]
-    return render_template('report.html', apk=apk, packages=packages)
+    patterns = [p.pattern for p in db.session.query(DString).filter(DString.report_id==apk.report.id).distinct(DString.pattern).all()]
+    strings = []
+    for p in patterns:
+        c = db.session.query(DString).filter(DString.report_id==4).filter(DString.pattern==p).count()
+        strings.append({"pattern": p, "count": c})
+    return render_template('report.html', apk=apk, strings=strings)
 
 # @app.route('/report/pkg_download', methods=['POST'])
 # def pkg_download():

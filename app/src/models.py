@@ -24,10 +24,13 @@ class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     apk_file_id = db.Column(db.Integer, db.ForeignKey('apk_file.id'),
         nullable=False)
+    package_name = db.Column(db.Text(), nullable=True)
     manifest_file_path = db.Column(db.Text(), nullable=True)
     zip_file_path = db.Column(db.Text(), nullable=True)
     ran_grep = db.Column(db.Boolean, nullable=True, default=False)
     dstrings = db.relationship('DString', backref='report')
+    permissions = db.relationship('Permission', backref='report')
+    services = db.relationship('Service', backref='report')
 
 
 # detected string
@@ -37,3 +40,22 @@ class DString(db.Model):
         nullable=False)
     value = db.Column(db.Text(), nullable=False)
     pattern = db.Column(db.Text(), nullable=False)
+
+class Permission(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    report_id = db.Column(db.Integer, db.ForeignKey('report.id'),
+        nullable=False)
+    value = db.Column(db.Text(), nullable=False)
+
+class Service(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    report_id = db.Column(db.Integer, db.ForeignKey('report.id'),
+        nullable=False)
+    value = db.Column(db.Text(), nullable=False)
+    services = db.relationship('ServiceAttribute', backref='service')
+
+class ServiceAttribute(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    service_id = db.Column(db.Integer, db.ForeignKey('service.id'),
+        nullable=False)
+    value = db.Column(db.Text(), nullable=False)

@@ -3,8 +3,9 @@ import subprocess
 import pathlib
 import zipfile
 import os
-from .models import ApkFile, db, DString, Report
+from .models import ApkFile, db, DString, Report, Service, ServiceAttribute, Permission
 import yara
+import xmltodict
 
 # Processes APK files
 # def process_apk(apk_file_path):
@@ -28,13 +29,38 @@ def download_package(apk, pkg_name, apk_loc, save_loc):
     scan_decompiled_code(apk, save_loc)
     # zipfolder(save_loc,save_loc)
 ############ re-coding
-def prepare_zip_file(apk_loc, save_loc):
+
+def decompile_apk(apk_loc, save_loc):
     # switch -d = --output-dir
-    decompile = subprocess.run(["/jadx/bin/jadx","--escape-unicode", "-d",save_loc,apk_loc])
+    subprocess.run(["/jadx/bin/jadx","--escape-unicode", "-d",save_loc,apk_loc])
+
+def prepare_zip_file(apk_loc, save_loc):
+    decompile_apk(apk_loc, save_loc)
     zipfolder(save_loc)
     # return path of zip file
     return "{}.zip".format(save_loc)
 
+def analyze_manifest(report, code_loc):
+    perms = []
+    svcs = []
+    # TODO verify that file exists
+    report.manifest_file_path = "{}/resources/AndroidManifest.xml".format(code_loc)
+    with open(report.manifest_file_path) as fd:
+        doc = xmltodict.parse(fd.read())
+        report.package_name = doc['manifest']['@package']
+        for p in doc['manifest']['uses-permission']:
+            perm = Permission(value=p['@android:name'])
+            report.permissions.append(perm)
+            perms.append(perm)
+        for s in doc['manifest']['application']['service']:
+            svc = Service(value=p['@android:name'])
+            report.services.append(svc)
+            svcs.append(svc)
+
+    # bulk DB insert
+    db.session.add_all(perms)
+    db.session.add_all(svcs)
+    db.session.commit()
 
 def run_grep(report, code_loc):
     # TODO load patterns from DB
