@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 from flask import render_template, request, redirect, flash
-from flask import url_for, send_from_directory
+from flask import url_for, send_from_directory, send_file
 from werkzeug.utils import secure_filename
 from .models import ApkFile, db, DString, Report
 from .codenames import codename
-from .processor import prepare_zip_file, run_grep, decompile_apk, analyze_manifest
+from .processor import prepare_zip_file, run_grep, decompile_apk, analyze_manifest, zipfolder
 from . import create_app
 import hashlib
 import yara
@@ -13,10 +13,30 @@ import xmltodict
 
 app = create_app()
 
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
+@app.route('/download/sample/<id>')
+def download_sample(id):
+    apk = ApkFile.query.get(id)
     return send_from_directory(app.config['UPLOAD_FOLDER'],
-                               filename)
+                               "{}.apk".format(id))
+
+@app.route('/download/decompiled/<id>')
+def download_zip_file(id):
+    apk = ApkFile.query.get(id)
+    if apk.report.zip_file_path:
+        return send_from_directory(app.config['UPLOAD_FOLDER'],"{}.zip".format(id))
+    else:
+        # zip file doesnt exists, create it
+        decompiled_loc = os.path.join(app.config['UPLOAD_FOLDER'], str(apk.id))
+        apk.report.zip_file_path = zipfolder(decompiled_loc)
+        db.session.commit()
+        return send_from_directory(app.config['UPLOAD_FOLDER'],"{}.zip".format(id))
+
+@app.route('/download/manifest/<id>')
+def download_manifest(id):
+    apk = ApkFile.query.get(id) 
+    return send_file(apk.report.manifest_file_path)
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -36,24 +56,6 @@ def clear_db():
 # Handle file submitted for analysis
 @app.route('/analysis', methods=['POST'])
 def analysis():
-    # print(request.form.get('get-code-zip'), flush=True)
-    # print(request.form.get('run-yara-apk'), flush=True)
-    # print(request.form.get('run-yara-code'), flush=True)
-    # print(request.form.get('run-grep-code'), flush=True)
-
-    # if request.form.get('get-code-zip'):
-        # zip_file_path = processor.prepare_zip_file(apk_location_on_disk, save_to_location)
-    # if request.form.get('run-grep-code'):
-        # processor.run_grep(report, code_loc)
-    # if request.form.get('run-yara-apk'):
-        # processor.yara_scan_apk
-    # if request.form.get('run-yara-code'):
-        # processor.yara_scan_decompiled_code
-
-
-    # print(request.form.get('run-grep-code'), flush=True)
-    # return redirect('/')
-    #############
     if 'file' not in request.files:
             flash('No file part', 'warning')
             return redirect('/')
@@ -66,7 +68,10 @@ def analysis():
     # if file and allowed_file(file.filename):
     filename = secure_filename(file.filename)
     # save file to disk
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    new_apk = ApkFile(name=filename)
+    db.session.add(new_apk)
+    db.session.commit()
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], "{}.apk".format(new_apk.id))
     file.save(file_path)
     # calculate file hashes
     with open(file_path, "rb") as f:
@@ -78,14 +83,10 @@ def analysis():
             sha1_hash.update(chunk) 
             sha256_hash.update(chunk) 
 
-    # add file name to DB
-    new_apk = ApkFile(name=filename,
-        md5_hash=md5_hash.hexdigest(),
-        sha1_hash=sha1_hash.hexdigest(),
-        sha256_hash=sha256_hash.hexdigest(),
-        filesize=os.stat(file_path).st_size)
-    db.session.add(new_apk)
-    db.session.commit()
+    new_apk.md5_hash = md5_hash.hexdigest()
+    new_apk.sha1_hash = sha1_hash.hexdigest()
+    new_apk.sha256_hash = sha256_hash.hexdigest()
+    new_apk.filesize = os.stat(file_path).st_size
 
     # TODO redesign model
     report = Report()
@@ -96,7 +97,7 @@ def analysis():
     decompile_loc = os.path.join(app.config['UPLOAD_FOLDER'], str(new_apk.id))
     if request.form.get('get-code-zip'):
         zip_file_path = prepare_zip_file(file_path, decompile_loc)
-        report.zip_file_path = zip_file_path
+        new_apk.report.zip_file_path = zip_file_path
     else:
         decompile_apk(file_path, decompile_loc)
     
@@ -106,7 +107,7 @@ def analysis():
         run_grep(report, decompile_loc)
     
     db.session.commit()
-    print("strings: {}\t\t\tzip file: {}".format(len(new_apk.report.dstrings), new_apk.report.zip_file_path), flush=True)
+    # print("strings: {}\t\t\tzip file: {}".format(len(new_apk.report.dstrings), new_apk.report.zip_file_path), flush=True)
     return redirect('/analysis')
 
 @app.route('/analysis', methods=['GET'])
@@ -127,12 +128,21 @@ def delete_report(id):
 @app.route('/report/<id>', methods=['GET'])
 def show_report(id):
     apk = ApkFile.query.get(id)
-    patterns = [p.pattern for p in db.session.query(DString).filter(DString.report_id==apk.report.id).distinct(DString.pattern).all()]
+    patterns = [p.pattern for p in db.session.query(DString).filter(
+                                        DString.report_id==apk.report.id
+                                    ).distinct(DString.pattern).all()]
     strings = []
     for p in patterns:
-        c = db.session.query(DString).filter(DString.report_id==4).filter(DString.pattern==p).count()
+        c = db.session.query(DString).filter(
+                DString.report_id==apk.report.id
+            ).filter(DString.pattern==p).count()
         strings.append({"pattern": p, "count": c})
     return render_template('report.html', apk=apk, strings=strings)
+
+@app.route('/report/<id>/strings', methods=['GET'])
+def show_strings(id):
+    apk = ApkFile.query.get(id)
+    return render_template('strings_show.html', apk=apk)
 
 # @app.route('/report/pkg_download', methods=['POST'])
 # def pkg_download():
