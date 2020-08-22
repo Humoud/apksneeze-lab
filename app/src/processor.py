@@ -35,7 +35,7 @@ def download_package(apk, pkg_name, apk_loc, save_loc):
 
 def decompile_apk(apk_loc, save_loc):
     # switch -d = --output-dir
-    subprocess.run(["/jadx/bin/jadx","-d",save_loc,apk_loc])
+    subprocess.run(["/jadx/bin/jadx","--escape-unicode", "-d",save_loc,apk_loc])
 
 def prepare_zip_file(apk_loc, save_loc):
     decompile_apk(apk_loc, save_loc)
@@ -117,14 +117,23 @@ def scan_decompiled_code(apk, code_location):
             db.session.add(ds)
             db.session.commit()
 
-# def test_yara(files_loc):
-#     rules_path = "/storage/yara_rules/"
-#     rules = yara.compile(rules_path)
-#     matches = []
-#     with open(files_loc, 'rb') as f:
-#         matches = rules.match(data=f.read())
+def test_yara(files_loc):
+    rules_path = "/storage/yara_rules/apksneeze.yar"
+    # compiled_rules = yara.compile(filepaths=rules)
 
-#     return matches
-    # if apk.report.dstrings:
-    #     apk.report.dstrings.clear()
-    #     db.session.commit()
+    rules = yara.compile(rules_path)
+    rules.save('/storage/yara_rules/compiled_rules')
+    rules = yara.load('/storage/yara_rules/compiled_rules')
+    matches = []
+
+    for root, dirs, files in os.walk(files_loc):
+        for file in files:
+            with open(os.path.join(root, file), "rb") as f:
+                m = rules.match(data=f.read())
+                matches.append(m)
+    flat_matches_list = [item for sublist in matches for item in sublist]
+    return flat_matches_list
+    
+    if apk.report.dstrings:
+        apk.report.dstrings.clear()
+        db.session.commit()

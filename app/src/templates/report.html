@@ -113,18 +113,16 @@
                     <thead>
                         <tr>
                             <th>Rule match</th>
+                            <th>Info</th>
                         </tr>
                     </thead>
                     <tbody>
+                        {% for m in yara_matches %}
                         <tr>
-                            <td>Bankerv9</td>
+                            <td>{{ m.rule }}</td>
+                            <td>{{ m.strings }}</td>
                         </tr>
-                        <tr>
-                            <td>RAT</td>
-                        </tr>
-                        <tr>
-                            <td>Drill</td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

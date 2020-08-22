@@ -4,7 +4,7 @@ from flask import url_for, send_from_directory, send_file
 from werkzeug.utils import secure_filename
 from .models import ApkFile, db, DString, Report
 from .codenames import codename
-from .processor import prepare_zip_file, run_grep, decompile_apk, analyze_manifest, zipfolder
+from .processor import prepare_zip_file, run_grep, decompile_apk, analyze_manifest, zipfolder, test_yara
 from . import create_app
 import hashlib
 import yara
@@ -134,7 +134,12 @@ def show_report(id):
                 DString.report_id==apk.report.id
             ).filter(DString.pattern==p).count()
         strings.append({"pattern": p, "count": c})
-    return render_template('report.html', apk=apk, strings=strings)
+
+
+    ##### DEV YARA
+    matches=test_yara(os.path.join(app.config['UPLOAD_FOLDER'], str(apk.id)))
+    ######
+    return render_template('report.html', apk=apk, strings=strings, yara_matches=matches)
 
 @app.route('/report/<id>/strings', methods=['GET'])
 def show_strings(id):
