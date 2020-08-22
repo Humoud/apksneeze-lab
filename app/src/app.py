@@ -87,8 +87,6 @@ def analysis():
     new_apk.sha1_hash = sha1_hash.hexdigest()
     new_apk.sha256_hash = sha256_hash.hexdigest()
     new_apk.filesize = os.stat(file_path).st_size
-
-    # TODO redesign model
     report = Report()
     new_apk.report = report
     db.session.add(report)
@@ -107,7 +105,6 @@ def analysis():
         run_grep(report, decompile_loc)
     
     db.session.commit()
-    # print("strings: {}\t\t\tzip file: {}".format(len(new_apk.report.dstrings), new_apk.report.zip_file_path), flush=True)
     return redirect('/analysis')
 
 @app.route('/analysis', methods=['GET'])
@@ -144,18 +141,6 @@ def show_strings(id):
     apk = ApkFile.query.get(id)
     return render_template('strings_show.html', apk=apk)
 
-# @app.route('/report/pkg_download', methods=['POST'])
-# def pkg_download():
-#     id = request.form.get('id')
-#     package = request.form.get('package')
-#     apk = ApkFile.query.get(id)
-#     apk_file_path = os.path.join(app.config['UPLOAD_FOLDER'], apk.name)
-#     download_path = os.path.join(app.config['UPLOAD_FOLDER'], apk.codename.replace(' ','_'))
-#     # os.mkdir(download_path)
-#     download_package(apk, package, apk_file_path, download_path)
-#     # return redirect('/')
-#     return redirect("/uploads/{}.zip".format(apk.codename.replace(' ','_')))
-
 @app.route('/run_yara/<id>', methods=['GET'])
 def run_yara(id):
     apk = ApkFile.query.get(id)
@@ -170,9 +155,6 @@ def run_yara(id):
         scans.append([os.path.join(root, file), matches])
     return render_template('yara.html', apk=apk, yara_scans=scans)
 
-@app.route('/strings/<id>', methods=['GET'])
-def run_strings(id):
-    return "a"
 
 if __name__ == "__main__":
     # app.secret_key = os.urandom(24)
