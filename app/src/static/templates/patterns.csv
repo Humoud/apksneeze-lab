@@ -1,0 +1,4 @@
+name,pattern,cmd_switches
+IPv4,"\b([0-9]{1,3}\.){3}[0-9]{1,3}\b",-oE
+HTTP,http://,-nari
+HTTPS,https://,-nari

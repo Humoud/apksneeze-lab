@@ -3,7 +3,7 @@ import subprocess
 import pathlib
 import zipfile
 import os
-from .models import ApkFile, db, DString, Report, Service, ServiceAttribute, Permission
+from .models import ApkFile, db, DString, Report, Service, ServiceAttribute, Permission, YaraMatch, StringPattern
 import yara
 import xmltodict
 import codecs
@@ -69,55 +69,24 @@ def analyze_manifest(report, code_loc):
     db.session.commit()
 
 def run_grep(report, code_loc):
-    # TODO load patterns from DB
-    patterns = ["CTF", "FLAG", "localhost"]
+    s_patterns = StringPattern.query.all()
     ds_list = []
-    for pattern in patterns:
-        command = "grep -nari {} {}/.".format(pattern, code_loc)
+    for sp in s_patterns:
+        command = "grep {} {} {}/.".format(sp.cmd_switches, sp.pattern, code_loc)
         process = subprocess.Popen(command,shell=True,stdin=None,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         # The output from the shell command
         result=process.stdout.readlines()
         for r in result:
             r = r.decode("utf-8", errors="replace").replace("\x00", "\uFFFD")
-            ds = DString(value=r, pattern=pattern)
+            ds = DString(value=r, pattern=sp.name)
             report.dstrings.append(ds)
             ds_list.append(ds)
     
     # bulk DB insert
     db.session.add_all(ds_list)
     db.session.commit()
-            # ds = DString(value=r, signature="sig")
-            # apk.report.dstrings.append(ds)
-            # db.session.add(apk)
-            # db.session.add(ds)
-            # db.session.commit()
 ############
-def scan_decompiled_code(apk, code_location):
-    sigs = ["CTF", "FLAG", "localhost"]
-    if apk.report == None:
-        report = Report(manifest_file="a",jar_file="asd",
-                    decompiled_zip_file = "aa",
-                    jar_error = True,
-                    decompile_error = True)
-        apk.report = report
-        db.session.add(report)
-        db.session.add(apk)
-        db.session.commit()
-        apk = ApkFile.query.get(apk.id)
-    for sig in sigs:
-        command = "grep -nari {} {}/.".format(sig, code_location)
-        process = subprocess.Popen(command,shell=True,stdin=None,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        # The output from the shell command
-        result=process.stdout.readlines()
-        for r in result:
-            r = r.decode("utf-8", errors="replace").replace("\x00", "\uFFFD")
-            ds = DString(value=r, signature="sig")
-            apk.report.dstrings.append(ds)
-            db.session.add(apk)
-            db.session.add(ds)
-            db.session.commit()
-
-def test_yara(files_loc):
+def yara_code_scan(apk, files_loc):
     rules_path = "/storage/yara_rules/apksneeze.yar"
     # compiled_rules = yara.compile(filepaths=rules)
 
@@ -129,11 +98,34 @@ def test_yara(files_loc):
     for root, dirs, files in os.walk(files_loc):
         for file in files:
             with open(os.path.join(root, file), "rb") as f:
-                m = rules.match(data=f.read())
-                matches.append(m)
-    flat_matches_list = [item for sublist in matches for item in sublist]
-    return flat_matches_list
-    
-    if apk.report.dstrings:
-        apk.report.dstrings.clear()
-        db.session.commit()
+                match = rules.match(data=f.read())
+                for m in match:
+                    ym = YaraMatch(rule_name=m.rule,code_scan=True,
+                                filename=os.path.join(root, file))
+                    matches.append(ym)
+                    apk.report.yara_matches.append(ym)
+
+    db.session.add_all(matches)
+    db.session.commit()
+    # flat_matches_list = [item for sublist in matches for item in sublist]
+    # return flat_matches_list
+
+def yara_apk_scan(apk, apk_loc):
+    rules_path = "/storage/yara_rules/apksneeze.yar"
+    # compiled_rules = yara.compile(filepaths=rules)
+
+    rules = yara.compile(rules_path)
+    rules.save('/storage/yara_rules/compiled_rules')
+    rules = yara.load('/storage/yara_rules/compiled_rules')
+    matches = []
+
+    with open(apk_loc, "rb") as f:
+        match = rules.match(data=f.read())
+        for m in match:
+            ym = YaraMatch(rule_name=m.rule,apk_scan=True,
+                        filename=apk_loc)
+            matches.append(ym)
+            apk.report.yara_matches.append(ym)
+
+    db.session.add_all(matches)
+    db.session.commit()

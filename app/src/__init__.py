@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from flask import Flask
 # ApkFile is imported below to give acess from >flask shell;from app import ApkFile
-from .models import ApkFile, db, DString, Report
+from .models import ApkFile, db, DString, Report, YaraMatch
 from flask_migrate import Migrate
 from . import config
 

@@ -31,6 +31,7 @@ class Report(db.Model):
     dstrings = db.relationship('DString', backref='report')
     permissions = db.relationship('Permission', backref='report')
     services = db.relationship('Service', backref='report')
+    yara_matches = db.relationship('YaraMatch', backref='report')
 
 
 # detected string
@@ -52,10 +53,28 @@ class Service(db.Model):
     report_id = db.Column(db.Integer, db.ForeignKey('report.id', ondelete='CASCADE'),
         nullable=True)
     value = db.Column(db.Text(), nullable=False)
-    services = db.relationship('ServiceAttribute', backref='service')
+    service_attributes = db.relationship('ServiceAttribute', backref='service')
 
 class ServiceAttribute(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     service_id = db.Column(db.Integer, db.ForeignKey('service.id', ondelete='CASCADE'),
         nullable=True)
     value = db.Column(db.Text(), nullable=False)
+
+class YaraMatch(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    apk_scan = db.Column(db.Boolean, nullable=True, default=False)
+    code_scan = db.Column(db.Boolean, nullable=True, default=False)
+    rule_name = db.Column(db.Text(), nullable=False)
+    filename = db.Column(db.Text(), nullable=False)
+    # str_offset = db.Column(db.Text(), nullable=True)
+    # str_id = db.Column(db.Text(), nullable=True)
+    # str_data = db.Column(db.Text(), nullable=True)
+    report_id = db.Column(db.Integer, db.ForeignKey('report.id', ondelete='CASCADE'),
+        nullable=True)
+
+class StringPattern(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
+    pattern = db.Column(db.Text(), nullable=False)
+    cmd_switches = db.Column(db.Text(), nullable=False)

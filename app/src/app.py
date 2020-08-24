@@ -2,16 +2,18 @@
 from flask import render_template, request, redirect, flash
 from flask import url_for, send_from_directory, send_file
 from werkzeug.utils import secure_filename
-from .models import ApkFile, db, DString, Report
+from .models import ApkFile, db, DString, Report, YaraMatch, StringPattern
 from .codenames import codename
-from .processor import prepare_zip_file, run_grep, decompile_apk, analyze_manifest, zipfolder, test_yara
+from .processor import prepare_zip_file, run_grep, decompile_apk, analyze_manifest, zipfolder, yara_apk_scan, yara_code_scan
 from . import create_app
 import hashlib
 import yara
 import os
 import xmltodict
+from .commands import db_blueprint
 
 app = create_app()
+app.register_blueprint(db_blueprint)
 
 @app.route('/download/sample/<id>')
 def download_sample(id):
@@ -104,6 +106,12 @@ def analysis():
     if request.form.get('run-grep-code'):
         run_grep(report, decompile_loc)
     
+    if request.form.get('run-yara-apk'):
+        yara_apk_scan(new_apk, file_path)
+
+    if request.form.get('run-yara-code'):
+        yara_code_scan(new_apk, decompile_loc)
+
     db.session.commit()
     return redirect('/analysis')
 
@@ -136,15 +144,48 @@ def show_report(id):
         strings.append({"pattern": p, "count": c})
 
 
-    ##### DEV YARA
-    matches=test_yara(os.path.join(app.config['UPLOAD_FOLDER'], str(apk.id)))
+    code_rules = [m.rule_name for m in db.session.query(YaraMatch).filter(
+                                        YaraMatch.report_id==apk.report.id, YaraMatch.code_scan==True 
+                                    ).distinct(YaraMatch.rule_name).all()]
+    code_matches = []
+    for r in code_rules:
+        c = db.session.query(YaraMatch).filter(
+                YaraMatch.report_id==apk.report.id, YaraMatch.code_scan==True
+            ).filter(YaraMatch.rule_name==r).count()
+        code_matches.append({"rule_name": r, "count": c})
+
+    apk_rules = [m.rule_name for m in db.session.query(YaraMatch).filter(
+                                        YaraMatch.report_id==apk.report.id, YaraMatch.apk_scan==True 
+                                    ).distinct(YaraMatch.rule_name).all()]
+    apk_matches = []
+    for r in apk_rules:
+        c = db.session.query(YaraMatch).filter(
+                YaraMatch.report_id==apk.report.id, YaraMatch.apk_scan==True
+            ).filter(YaraMatch.rule_name==r).count()
+        apk_matches.append({"rule_name": r, "count": c})
     ######
-    return render_template('report.html', apk=apk, strings=strings, yara_matches=matches)
+    return render_template('report.html', apk=apk, strings=strings, yara_code_matches=code_matches, yara_apk_matches=apk_matches)
 
 @app.route('/report/<id>/strings', methods=['GET'])
 def show_strings(id):
     apk = ApkFile.query.get(id)
     return render_template('strings_show.html', apk=apk)
+
+@app.route('/report/<id>/yara/code/show', methods=['GET'])
+def show_yara_code(id):
+    apk = ApkFile.query.get(id)
+    results = db.session.query(YaraMatch).filter(
+                YaraMatch.report_id==apk.report.id,
+                YaraMatch.code_scan==True).all()
+    return render_template('yara_show.html', apk=apk, matches = results)
+
+@app.route('/report/<id>/yara/apk/show', methods=['GET'])
+def show_yara_apk(id):
+    apk = ApkFile.query.get(id)
+    results = db.session.query(YaraMatch).filter(
+                YaraMatch.report_id==apk.report.id,
+                YaraMatch.apk_scan==True).all()
+    return render_template('yara_show.html', apk=apk, matches = results)
 
 @app.route('/run_yara/<id>', methods=['GET'])
 def run_yara(id):
@@ -159,7 +200,11 @@ def run_yara(id):
             matches = rules.match(data=f.read())
         scans.append([os.path.join(root, file), matches])
     return render_template('yara.html', apk=apk, yara_scans=scans)
-
+    
+@app.route('/config/grep', methods=['GET'])
+def grep_conf():
+    s_patterns = StringPattern.query.all()
+    return render_template('grep_conf.html', string_patterns=s_patterns)
 
 if __name__ == "__main__":
     # app.secret_key = os.urandom(24)

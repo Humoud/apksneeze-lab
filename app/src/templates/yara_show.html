@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex flex-column" id="content-wrapper">
+    <div id="content">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('show_report', id=apk.id) }}"><span>Report</span></a></li>
+                <li class="breadcrumb-item"><a href="#"><span>Yara</span></a></li>
+            </ol>
+            <h2>{{ apk.name }}</h2>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <tbody>
+                        <tr>
+                            <th scope="row">Size (Bytes)</th>
+                            <td>{{ apk.filesize }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">MD5</th>
+                            <td>{{ apk.md5_hash }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">SHA1</th>
+                            <td>{{ apk.sha1_hash }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">SHA256</th>
+                            <td>{{ apk.sha256_hash }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Rule</th>
+                            <th>File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for m in matches %}
+                        <tr>
+                            <td>{{ m.rule_name }}</td>
+                            <td>{{ m.filename }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% include 'footer.html' %}
+</div>
+{% endblock content %}

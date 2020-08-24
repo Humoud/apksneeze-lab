@@ -86,7 +86,9 @@
             </div>
         </div>
         <div class="container">
-            <h3>Strings</h3><a href="{{ url_for('show_strings', id=apk.id) }}" class="btn btn-primary" type="button" style="margin-bottom: 2px;">Full View (includes hits)</a>
+            <h3>Strings</h3>
+            {% if strings %}
+            <a href="{{ url_for('show_strings', id=apk.id) }}" class="btn btn-primary" type="button" style="margin-bottom: 2px;">Full View (includes hits)</a>
             <div class="table-responsive">
                 <table class="table table-sm">
                     <thead>
@@ -105,27 +107,61 @@
                     </tbody>
                 </table>
             </div>
+            {% else %}
+                <p> Either there is no hits or grep against the decompiled files was not initiated.</p>
+            {%endif%}
         </div>
         <div class="container">
-            <h3>Yara</h3><button class="btn btn-primary" type="button" style="margin-bottom: 2px;">View Full</button>
+            <h3>Yara <small>decompiled code scan</small></h3>
+            {% if yara_code_matches %}
+            <a href="{{ url_for('show_yara_code', id=apk.id) }}" class="btn btn-primary" type="button" style="margin-bottom: 2px;">View Full</a>
             <div class="table-responsive">
                 <table class="table table-sm">
                     <thead>
                         <tr>
                             <th>Rule match</th>
-                            <th>Info</th>
+                            <th># of Hits</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for m in yara_matches %}
+                        {% for m in yara_code_matches %}
                         <tr>
-                            <td>{{ m.rule }}</td>
-                            <td>{{ m.strings }}</td>
+                            <td>{{ m['rule_name'] }}</td>
+                            <td>{{ m['count'] }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% else %}
+            <p> Either there is no hits or a scan against the decompiled files was not initiated.</p>
+            {%endif%}
+        </div>
+        <div class="container">
+            <h3>Yara <small>apk file scan</small></h3>
+            {% if yara_apk_matches %}
+            <a href="{{ url_for('show_yara_apk', id=apk.id) }}" class="btn btn-primary" type="button" style="margin-bottom: 2px;">View Full</a href="{{ url_for('download_sample', id=apk.id) }}">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Rule match</th>
+                            <th># of Hits</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in yara_apk_matches %}
+                        <tr>
+                            <td>{{ m['rule_name'] }}</td>
+                            <td>{{ m['count'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p> Either there is no hits or a scan against the apk file was not initiated.</p>
+            {%endif%}
         </div>
     </div>
     {% include 'footer.html' %}
