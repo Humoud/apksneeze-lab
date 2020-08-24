@@ -14,7 +14,7 @@ def create_app():
     flask_app.config['UPLOAD_FOLDER'] = config.UPLOAD_FOLDER
     flask_app.app_context().push()
     db.init_app(flask_app)
-    migrate = Migrate(flask_app, db)
+    # migrate = Migrate(flask_app, db)
     # migrate.init_app(flask_app, db)
     db.create_all()
     return flask_app

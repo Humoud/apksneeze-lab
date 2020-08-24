@@ -9,7 +9,9 @@ from . import create_app
 import hashlib
 import yara
 import os
+from io import StringIO
 import xmltodict
+import csv
 from .commands import db_blueprint
 
 app = create_app()
@@ -38,6 +40,9 @@ def download_manifest(id):
     apk = ApkFile.query.get(id) 
     return send_file(apk.report.manifest_file_path)
 
+@app.route('/download/patterns_template')
+def download_patterns_template():
+    return send_file('/storage/patterns.csv')
 
 @app.route('/')
 def index():
@@ -59,7 +64,7 @@ def clear_db():
 @app.route('/analysis', methods=['POST'])
 def analysis():
     if 'file' not in request.files:
-            flash('No file part', 'warning')
+            flash('No file', 'warning')
             return redirect('/')
     file = request.files['file']
     # if user does not select file, browser also
@@ -126,7 +131,7 @@ def delete_report(id):
     db.session.delete(delete_apk)
     db.session.commit()
     flash('Delete Report Successfuly', 'success')
-    return redirect('/anaylsis')
+    return redirect('/analysis')
 
 ######
 # Reports page showing results of analysis
@@ -143,7 +148,6 @@ def show_report(id):
             ).filter(DString.pattern==p).count()
         strings.append({"pattern": p, "count": c})
 
-
     code_rules = [m.rule_name for m in db.session.query(YaraMatch).filter(
                                         YaraMatch.report_id==apk.report.id, YaraMatch.code_scan==True 
                                     ).distinct(YaraMatch.rule_name).all()]
@@ -153,7 +157,6 @@ def show_report(id):
                 YaraMatch.report_id==apk.report.id, YaraMatch.code_scan==True
             ).filter(YaraMatch.rule_name==r).count()
         code_matches.append({"rule_name": r, "count": c})
-
     apk_rules = [m.rule_name for m in db.session.query(YaraMatch).filter(
                                         YaraMatch.report_id==apk.report.id, YaraMatch.apk_scan==True 
                                     ).distinct(YaraMatch.rule_name).all()]
@@ -163,7 +166,7 @@ def show_report(id):
                 YaraMatch.report_id==apk.report.id, YaraMatch.apk_scan==True
             ).filter(YaraMatch.rule_name==r).count()
         apk_matches.append({"rule_name": r, "count": c})
-    ######
+    
     return render_template('report.html', apk=apk, strings=strings, yara_code_matches=code_matches, yara_apk_matches=apk_matches)
 
 @app.route('/report/<id>/strings', methods=['GET'])
@@ -205,6 +208,40 @@ def run_yara(id):
 def grep_conf():
     s_patterns = StringPattern.query.all()
     return render_template('grep_conf.html', string_patterns=s_patterns)
+
+@app.route('/config/grep', methods=['POST'])
+def upload_new_grep_patterns():
+    if 'file' not in request.files:
+            flash('No file', 'warning')
+            return redirect('/config/grep')
+    file = request.files['file']
+    if file.filename == '':
+        flash('No selected file', 'warning')
+        return redirect('/config/grep')
+    
+    # Clear string patterns table
+    db.session.query(StringPattern).delete()
+    db.session.commit()
+    # read new file
+    patterns_list = []
+    stream = StringIO(file.stream.read().decode("UTF8"), newline=None)
+    csv_reader = csv.reader(stream, delimiter=',')
+    line_count = 0
+    for row in csv_reader:
+        if line_count == 0:
+            line_count += 1
+        else:
+            # line_count += 1
+            sp = StringPattern(name=row[0],pattern=row[1],cmd_switches=row[2])
+            patterns_list.append(sp)
+    
+    db.session.add_all(patterns_list)
+    db.session.commit()
+
+    s_patterns = StringPattern.query.all()
+    return render_template('grep_conf.html', string_patterns=s_patterns)
+
+
 
 if __name__ == "__main__":
     # app.secret_key = os.urandom(24)

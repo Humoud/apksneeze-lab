@@ -72,7 +72,10 @@ def run_grep(report, code_loc):
     s_patterns = StringPattern.query.all()
     ds_list = []
     for sp in s_patterns:
-        command = "grep {} {} {}/.".format(sp.cmd_switches, sp.pattern, code_loc)
+        if 'E' in sp.cmd_switches:
+            command = "grep {} \"{}\" {}/.".format(sp.cmd_switches, sp.pattern, code_loc)
+        else:
+            command = "grep {} {} {}/.".format(sp.cmd_switches, sp.pattern, code_loc)
         process = subprocess.Popen(command,shell=True,stdin=None,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         # The output from the shell command
         result=process.stdout.readlines()

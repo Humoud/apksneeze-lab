@@ -1,5 +1,10 @@
+{% for category, message in get_flashed_messages(with_categories=True) %}
+    <div class="alert alert-{{category}}">{{ message }}</div>
+{% endfor %}
 <footer class="bg-white sticky-footer">
     <div class="container my-auto">
-        <div class="text-center my-auto copyright"><span>Copyright © apksneeze lab 2020</span></div>
+        <div class="text-center my-auto copyright">
+            <span>Copyright © apksneeze lab 2020</span>
+        </div>
     </div>
 </footer>
