@@ -89,13 +89,8 @@ def run_grep(report, code_loc):
     db.session.add_all(ds_list)
     db.session.commit()
 ############
-def yara_code_scan(apk, files_loc):
-    rules_path = "/storage/yara_rules/apksneeze.yar"
-    # compiled_rules = yara.compile(filepaths=rules)
-
-    rules = yara.compile(rules_path)
-    rules.save('/storage/yara_rules/compiled_rules')
-    rules = yara.load('/storage/yara_rules/compiled_rules')
+def yara_code_scan(apk, files_loc, compiled_rules_path):
+    rules = yara.load(compiled_rules_path)
     matches = []
 
     for root, dirs, files in os.walk(files_loc):
@@ -113,13 +108,8 @@ def yara_code_scan(apk, files_loc):
     # flat_matches_list = [item for sublist in matches for item in sublist]
     # return flat_matches_list
 
-def yara_apk_scan(apk, apk_loc):
-    rules_path = "/storage/yara_rules/apksneeze.yar"
-    # compiled_rules = yara.compile(filepaths=rules)
-
-    rules = yara.compile(rules_path)
-    rules.save('/storage/yara_rules/compiled_rules')
-    rules = yara.load('/storage/yara_rules/compiled_rules')
+def yara_apk_scan(apk, apk_loc, compiled_rules_path):
+    rules = yara.load(compiled_rules_path)
     matches = []
 
     with open(apk_loc, "rb") as f:

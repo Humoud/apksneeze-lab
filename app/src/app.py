@@ -44,6 +44,10 @@ def download_manifest(id):
 def download_patterns_template():
     return send_file('/storage/patterns.csv')
 
+@app.route('/download/yara_rules')
+def download_yara_rules():
+    return send_file('/storage/yara_rules/apksneeze.yar')
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -112,10 +116,10 @@ def analysis():
         run_grep(report, decompile_loc)
     
     if request.form.get('run-yara-apk'):
-        yara_apk_scan(new_apk, file_path)
+        yara_apk_scan(new_apk, file_path, app.config['YARA_COMPILED'])
 
     if request.form.get('run-yara-code'):
-        yara_code_scan(new_apk, decompile_loc)
+        yara_code_scan(new_apk, decompile_loc, app.config['YARA_COMPILED'])
 
     db.session.commit()
     return redirect('/analysis')
@@ -130,7 +134,7 @@ def delete_report(id):
     delete_apk = ApkFile.query.get(id)
     db.session.delete(delete_apk)
     db.session.commit()
-    flash('Delete Report Successfuly', 'success')
+    flash('Delete Report Successfully', 'success')
     return redirect('/analysis')
 
 ######
@@ -239,9 +243,37 @@ def upload_new_grep_patterns():
     db.session.commit()
 
     s_patterns = StringPattern.query.all()
+    flash('Patterns Updated', 'success')
     return render_template('grep_conf.html', string_patterns=s_patterns)
 
+@app.route('/config/yara', methods=['GET'])
+def yara_conf():
+    data = None
+    with open(app.config['YARA_RULES'], 'r') as f:
+        data = f.read().splitlines()
+    return render_template('yara_conf.html', rules=data)
 
+@app.route('/config/yara', methods=['POST'])
+def yara_conf_upload():
+    if 'file' not in request.files:
+            flash('No file', 'warning')
+            return redirect('/config/yara')
+    file = request.files['file']
+    if file.filename == '':
+        flash('No selected file', 'warning')
+        return redirect('/config/yara')
+    
+    file.save(app.config['YARA_RULES'])
+    rules = yara.compile(app.config['YARA_RULES'])
+    # save compiled rules
+    rules.save(app.config['YARA_COMPILED'])
+
+    data = None
+    with open(app.config['YARA_RULES'], 'r') as f:
+        data = f.read().splitlines()
+    
+    flash('Rules Updated', 'success')
+    return render_template('yara_conf.html', rules=data)
 
 if __name__ == "__main__":
     # app.secret_key = os.urandom(24)

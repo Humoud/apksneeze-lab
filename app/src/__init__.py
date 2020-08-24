@@ -12,6 +12,8 @@ def create_app():
     flask_app.config['SQLALCHEMY_DATABASE_URI'] = config.DATABASE_CONNECTION_URI
     flask_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     flask_app.config['UPLOAD_FOLDER'] = config.UPLOAD_FOLDER
+    flask_app.config['YARA_RULES'] = config.YARA_RULES_FILE_PATH
+    flask_app.config['YARA_COMPILED'] = config.YARA_COMPILED_PATH
     flask_app.app_context().push()
     db.init_app(flask_app)
     # migrate = Migrate(flask_app, db)

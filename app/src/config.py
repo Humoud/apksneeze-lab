@@ -12,3 +12,5 @@ DATABASE_CONNECTION_URI = f'postgresql+psycopg2://{user}:{password}@{host}:{port
 #  https://flask.palletsprojects.com/en/1.1.x/patterns/fileuploads/
 UPLOAD_FOLDER = '/storage'
 ALLOWED_EXTENSIONS = {'apk'}
+YARA_RULES_FILE_PATH = '/storage/yara_rules/apksneeze.yar'
+YARA_COMPILED_PATH = '/storage/yara_rules/compiled_rules'
