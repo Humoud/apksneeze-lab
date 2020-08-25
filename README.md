@@ -40,6 +40,8 @@ If you want to clear the DB (excluding string patterns) you can issue a GET requ
 You can modify code on the fly since the code volume is mounted  on both the web app and the worker, plus the project is running in debug mode.
 
 ## Screenshots
+Sorry for the bad quality of images had issues with resizing...
+
 Here are some screenshot of running the tool against the injured android app developed by B3nac https://github.com/B3nac/InjuredAndroid. Many thanks to B3nac for this app!
 
 Index page
