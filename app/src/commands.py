@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.8
 # https://stackoverflow.com/questions/57202736/where-should-i-implement-flask-custom-commands-cli
 import click
 from flask import Blueprint
 import csv
-from .models import db, StringPattern
+from app.models import db, StringPattern
 
 db_blueprint = Blueprint('seed', __name__)
 

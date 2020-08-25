@@ -1,19 +1,33 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.8
 import subprocess
 import pathlib
 import zipfile
 import os
-from .models import ApkFile, db, DString, Report, Service, ServiceAttribute, Permission, YaraMatch, StringPattern
+from app.models import *
 import yara
 import xmltodict
 import codecs
+from . import create_app
 
-# Processes APK files
-# def process_apk(apk_file_path):
-#     jadx = pyjadx.Jadx()
-#     # decompiler = jadx.load(apk_file_path)
-#     # return decompiler.packages
-#     return [apk_file_path]
+app = create_app()
+
+def file_submission_task(req_info):
+    apk = ApkFile.query.get(req_info['apk_id'])
+    if req_info['prepare_zipfile']:
+        zip_file_path = prepare_zip_file(req_info['file_path'], req_info['decompile_loc'])
+        apk.report.zip_file_path = zip_file_path
+    else:
+        decompile_apk(req_info['file_path'], req_info['decompile_loc'])
+    analyze_manifest(apk.report, req_info['decompile_loc'])
+    if req_info['grep_code']:
+        run_grep(apk.report, req_info['decompile_loc'])
+    if req_info['yara_apk']:
+        yara_apk_scan(apk, req_info['file_path'], app.config['YARA_COMPILED'])
+    if req_info['yara_code']:
+        yara_code_scan(apk, req_info['decompile_loc'], app.config['YARA_COMPILED'])
+    
+    apk.analyzed = True
+    db.session.commit()
 
 def zipfolder(target_dir):            
     # set zipfile name same as the orignal file but with ext .zip
@@ -25,13 +39,6 @@ def zipfolder(target_dir):
             fn = os.path.join(base, file)
             zipobj.write(fn, fn[rootlen:])
     return save_loc
-
-# Code keep crashing JVM which crashes the container
-def download_package(apk, pkg_name, apk_loc, save_loc):
-    # decompile = subprocess.run(["/jadx/bin/jadx", "-d", save_loc,apk_loc])
-    scan_decompiled_code(apk, save_loc)
-    # zipfolder(save_loc,save_loc)
-############ re-coding
 
 def decompile_apk(apk_loc, save_loc):
     # switch -d = --output-dir
@@ -88,7 +95,7 @@ def run_grep(report, code_loc):
     # bulk DB insert
     db.session.add_all(ds_list)
     db.session.commit()
-############
+
 def yara_code_scan(apk, files_loc, compiled_rules_path):
     rules = yara.load(compiled_rules_path)
     matches = []

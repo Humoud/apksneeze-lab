@@ -4,14 +4,14 @@
 <div class="d-flex flex-column" id="content-wrapper">
     <div id="content">
         <nav class="navbar navbar-light navbar-expand bg-white shadow mb-4 topbar static-top">
-            <div class="container-fluid"><button class="btn btn-link d-md-none rounded-circle mr-3" id="sidebarToggleTop" type="button"><i class="fas fa-bars"></i></button>
+            <!-- <div class="container-fluid"><button class="btn btn-link d-md-none rounded-circle mr-3" id="sidebarToggleTop" type="button"><i class="fas fa-bars"></i></button>
                 <form class="form-inline d-none d-sm-inline-block mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search"
                     method="post">
                     <div class="input-group"><input class="bg-light form-control border-0 small" type="text" placeholder="Search for ...">
                         <div class="input-group-append"><button class="btn btn-primary py-0" type="button"><i class="fas fa-search"></i></button></div>
                     </div>
                 </form>
-            </div>
+            </div> -->
         </nav>
         <div class="container">
             <h1>Dashboard</h1>
@@ -33,13 +33,30 @@
                         {% for apk in apks %}
                         <tr>
                             <td>{{ apk.name }}</td>
-                            {# {% if apks.report %} #}
+                            {% if apk.analyzed %}
                                 <td><a class="btn btn-primary btn-circle ml-1" href="{{ url_for('show_report', id=apk.id) }}" role="button"><i class="fas fa-check text-white"></i></a></td>
-                            {# {% else %}
-                                <td><a class="btn btn-secondary btn-circle ml-1" role="button"><i class="fas fa-hourglass-half text-white"></i></a></td>
-                            {% endif %} #}
+                            {% else %}
+                                <td><a class="btn btn-secondary btn-circle ml-1" role="button">Please wait</a></td>
+                                <script>
+                                    function getTaskStatus(){
+                                        $.ajax({
+                                            url: '/tasks/{{apk.task_id}}',
+                                            type: 'get',
+                                            statusCode: {
+                                                200: function(xhr){
+                                                    // if task is done then refresh page
+                                                    location.reload();
+                                                }
+                                            }
+                                        });
+                                    }
+                                    $(document).ready(function(){
+                                        setInterval(getTaskStatus,5000);
+                                    });
+                                </script>
+                            {% endif %}
                             <td>{{ apk.codename }}</td>
-                            <td>{{ apk.created_at.date() }}</td>
+                            <td>{{ apk.created_at.strftime('%Y-%m-%d %X') }}</td>
                             <td><a class="btn btn-danger btn-circle ml-1" href="{{ url_for('delete_report', id=apk.id) }}" role="button"><i class="fas fa-trash text-white"></i></a></td>
                             <td></td>
                         </tr>

@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.8
 from flask import render_template, request, redirect, flash
 from flask import url_for, send_from_directory, send_file
 from werkzeug.utils import secure_filename
-from .models import ApkFile, db, DString, Report, YaraMatch, StringPattern
-from .codenames import codename
-from .processor import prepare_zip_file, run_grep, decompile_apk, analyze_manifest, zipfolder, yara_apk_scan, yara_code_scan
+from app.models import *
+from app.codenames import codename
+from app.processor import file_submission_task
 from . import create_app
 import hashlib
 import yara
@@ -12,7 +12,8 @@ import os
 from io import StringIO
 import xmltodict
 import csv
-from .commands import db_blueprint
+from app.commands import db_blueprint
+from rq.job import Job
 
 app = create_app()
 app.register_blueprint(db_blueprint)
@@ -62,6 +63,15 @@ def clear_db():
     db.session.commit()
     return redirect('/')
 
+@app.route("/tasks/<job_key>", methods=['GET'])
+def get_results(job_key):
+    job = Job.fetch(job_key, connection=app.redis)
+
+    if job.is_finished:
+        return "Done", 200
+    else:
+        return "In progress", 202
+
 ################    
 ######
 # Handle file submitted for analysis
@@ -104,25 +114,51 @@ def analysis():
     db.session.commit()
 
     decompile_loc = os.path.join(app.config['UPLOAD_FOLDER'], str(new_apk.id))
-    if request.form.get('get-code-zip'):
-        zip_file_path = prepare_zip_file(file_path, decompile_loc)
-        new_apk.report.zip_file_path = zip_file_path
-    else:
-        decompile_apk(file_path, decompile_loc)
-    
-    analyze_manifest(report, decompile_loc)
+    ########
+    req_info = {
+        'apk_id': new_apk.id,
+        'file_path': file_path,
+        'decompile_loc': decompile_loc,
+        'prepare_zipfile': request.form.get('get-code-zip'),
+        'grep_code': request.form.get('run-grep-code'),
+        'yara_apk': request.form.get('run-yara-apk'),
+        'yara_code': request.form.get('run-yara-code')
+    }
 
-    if request.form.get('run-grep-code'):
-        run_grep(report, decompile_loc)
-    
-    if request.form.get('run-yara-apk'):
-        yara_apk_scan(new_apk, file_path, app.config['YARA_COMPILED'])
-
-    if request.form.get('run-yara-code'):
-        yara_code_scan(new_apk, decompile_loc, app.config['YARA_COMPILED'])
-
+    job = app.task_queue.enqueue_call(
+            func=file_submission_task, args=(req_info,), result_ttl=5000
+    )
+    new_apk.task_id = job.get_id()
     db.session.commit()
     return redirect('/analysis')
+    ###########
+    # if request.form.get('get-code-zip'):
+    #     job = app.task_queue.enqueue_call(
+    #         func=prepare_zip_file, args=(file_path,decompile_loc), result_ttl=5000
+    #     )
+    #     print(job.get_id(), flush=True)
+    #     # zip_file_path = prepare_zip_file(file_path, decompile_loc)
+    #     # new_apk.report.zip_file_path = zip_file_path
+    # else:
+    #     decompile_apk(file_path, decompile_loc)
+    
+    # # analyze_manifest(report, decompile_loc)
+    # job2 = app.task_queue.enqueue_call(
+    #     func=analyze_manifest, args=(report,decompile_loc), result_ttl=5000
+    # )
+    # print(job2.get_id(), flush=True)
+
+    # if request.form.get('run-grep-code'):
+    #     run_grep(report, decompile_loc)
+    
+    # if request.form.get('run-yara-apk'):
+    #     yara_apk_scan(new_apk, file_path, app.config['YARA_COMPILED'])
+
+    # if request.form.get('run-yara-code'):
+    #     yara_code_scan(new_apk, decompile_loc, app.config['YARA_COMPILED'])
+
+    # db.session.commit()
+    # return redirect('/analysis')
 
 @app.route('/analysis', methods=['GET'])
 def dashboard():

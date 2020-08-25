@@ -25,6 +25,6 @@ RUN apk update \
     # Cleanup
     && apk del build-deps && rm -rf /var/cache/apk/*
 
-WORKDIR /app
+WORKDIR /flask/app
 
 CMD [ "python3.8", "-m", "flask", "run" ]

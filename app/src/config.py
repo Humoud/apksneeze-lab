@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.8
 import os
 
 user = os.environ["POSTGRES_USER"]

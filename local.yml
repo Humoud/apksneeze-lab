@@ -1,28 +1,28 @@
 version: '3'
 services:
-  postgres:
-    build:
-      context: .
-      dockerfile: ./compose/postgres/Dockerfile
-    image: apksneeze_db
-    env_file: ./.env/.postgres
-
   flask:
     build:
       context: .
       dockerfile: ./compose/flask/Dockerfile
     image: apksneeze_web
+    container_name: apksneeze_web
     env_file: ./.env/.postgres
-    environment:
-      - JVM_OPTS=-Xms2g -Xmx2g
     ports:
       - "5000:5000"
     volumes:
-      - "./app/src:/app"
+      - "./app/src:/flask/app"
       - "./app/storage:/storage"
-    deploy:
-      resources:
-        limits:
-          memory: 4G
-        reservations:
-          memory: 3G
+    depends_on:
+      - redis
+      - postgres
+
+  redis:
+    image: redis:6.0.6-buster
+    container_name: redis
+  
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/postgres/Dockerfile
+    container_name: apksneeze_db
+    env_file: ./.env/.postgres

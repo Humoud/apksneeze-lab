@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.8
 # Taken from: https://github.com/GhostManager/Ghostwriter/blob/master/ghostwriter/modules/codenames.py
 # Which is based on: https://github.com/and3rson/codename/blob/master/codename/codename.py
 
