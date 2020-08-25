@@ -5,9 +5,9 @@ app/src/migrations
 # ignore everything in storage directory
 app/storage/*
 
-!/storage/yara_rules/apksneeze.yar
-!/storage/patterns.csv
-!/storage/.keep
+!storage/yara_rules/apksneeze.yar
+!storage/patterns.csv
+!storage/.keep
 
 
 # OS generated files
