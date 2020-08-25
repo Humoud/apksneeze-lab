@@ -24,6 +24,7 @@ services:
     container_name: apksneeze_worker
     env_file: ./.env/.postgres
     volumes:
+      - "./flask/:/flask/"
       - "./storage:/storage"
     depends_on:
       - flask

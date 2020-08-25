@@ -13,6 +13,11 @@ app = create_app()
 
 def file_submission_task(req_info):
     apk = ApkFile.query.get(req_info['apk_id'])
+    report = Report()
+    apk.report = report
+    db.session.add(report)
+    db.session.commit()
+
     if req_info['prepare_zipfile']:
         zip_file_path = prepare_zip_file(req_info['file_path'], req_info['decompile_loc'])
         apk.report.zip_file_path = zip_file_path
@@ -64,11 +69,12 @@ def analyze_manifest(report, code_loc):
             report.permissions.append(perm)
             perms.append(perm)
         # services
-        for key, value in doc['manifest']['application']['service'].items():
-            if key == '@android:name':
-                svc = Service(value=value)
-                report.services.append(svc)
-                svcs.append(svc)
+        if isinstance(doc['manifest']['application']['service'], dict):
+            for key, value in doc['manifest']['application']['service'].items():
+                if key == '@android:name':
+                    svc = Service(value=value)
+                    report.services.append(svc)
+                    svcs.append(svc)
 
     # bulk DB insert
     db.session.add_all(perms)

@@ -53,14 +53,15 @@ def index():
     return render_template('index.html')
 
 ### FOR DEVELOPMENT PURPOSES
-# @views_bp.route('/clear_all')
-# def clear_db():
-#     meta = db.metadata
-#     for table in reversed(meta.sorted_tables):
-#         print('Clear table %s' % table, flush=True)
-#         db.session.execute(table.delete())
-#     db.session.commit()
-#     return redirect('/')
+@views_bp.route('/clear_all')
+def clear_db():
+    meta = db.metadata
+    for table in reversed(meta.sorted_tables):
+        if table != 'string_pattern':
+            print('Clear table %s' % table, flush=True)
+            db.session.execute(table.delete())
+    db.session.commit()
+    return redirect('/')
 ##########
 
 @views_bp.route("/tasks/<job_key>", methods=['GET'])
@@ -108,10 +109,6 @@ def analysis():
     new_apk.sha1_hash = sha1_hash.hexdigest()
     new_apk.sha256_hash = sha256_hash.hexdigest()
     new_apk.filesize = os.stat(file_path).st_size
-    report = Report()
-    new_apk.report = report
-    db.session.add(report)
-    db.session.commit()
 
     decompile_loc = os.path.join(app.config['UPLOAD_FOLDER'], str(new_apk.id))
     ########
