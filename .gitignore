@@ -4,8 +4,11 @@
 app/src/migrations
 # ignore everything in storage directory
 app/storage/*
-# but keep the directory itself
-!app/storage/.keep
+
+!/storage/yara_rules/apksneeze.yar
+!/storage/patterns.csv
+!/storage/.keep
+
 
 # OS generated files
 .DS_Store?
