@@ -4,10 +4,12 @@ import click
 from flask import Blueprint
 import csv
 from app.models import db, StringPattern
+import app.config as config
+import yara
 
-db_blueprint = Blueprint('seed', __name__)
+commands_bp = Blueprint('apksneeze', __name__)
 
-@db_blueprint.cli.command('db')
+@commands_bp.cli.command('seed')
 # @click.argument('name')
 def seed_db():
     """ Seed Database """
@@ -26,4 +28,11 @@ def seed_db():
     db.session.add_all(patterns_list)
     db.session.commit()
 
-
+@commands_bp.cli.command('compile')
+def compile_yara_rules():
+    """ compiled yara rules"""
+    print("compiling: {}".format(config.YARA_RULES_FILE_PATH))
+    rules = yara.compile(config.YARA_RULES_FILE_PATH)
+    print("saving compiled rules to: {}".format(config.YARA_COMPILED_PATH))    
+    rules.save(config.YARA_COMPILED_PATH)
+    print("done.")

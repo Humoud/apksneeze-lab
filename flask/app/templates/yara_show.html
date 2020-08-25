@@ -37,6 +37,7 @@
                         <tr>
                             <th>Rule</th>
                             <th>File</th>
+                            <th>View</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -44,6 +45,13 @@
                         <tr>
                             <td>{{ m.rule_name }}</td>
                             <td>{{ m.filename }}</td>
+                            <td>    
+                                <form action="{{ url_for('views.yara_show_code') }}" method="POST">
+                                    <input type="hidden" name="id" value="{{ apk.id }}">
+                                    <input type="hidden" name="filepath" value="{{ m.filename }}">
+                                    <input class="btn btn-primary" type="submit" value="view">
+                                </form>
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>

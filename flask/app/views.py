@@ -6,6 +6,7 @@ from app.models import *
 from app.codenames import codename
 from app.processor import file_submission_task, zipfolder
 from app.app import flask_app as app
+from rq.job import Job
 import hashlib
 import yara
 import os
@@ -13,16 +14,16 @@ from io import StringIO
 import xmltodict
 import csv
 
-views = Blueprint('views', __name__)
+views_bp = Blueprint('views', __name__)
 
 
-@views.route('/download/sample/<id>')
+@views_bp.route('/download/sample/<id>')
 def download_sample(id):
     apk = ApkFile.query.get(id)
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                                "{}.apk".format(id))
 
-@views.route('/download/decompiled/<id>')
+@views_bp.route('/download/decompiled/<id>')
 def download_zip_file(id):
     apk = ApkFile.query.get(id)
     if apk.report.zip_file_path:
@@ -34,25 +35,25 @@ def download_zip_file(id):
         db.session.commit()
         return send_from_directory(app.config['UPLOAD_FOLDER'],"{}.zip".format(id))
 
-@views.route('/download/manifest/<id>')
+@views_bp.route('/download/manifest/<id>')
 def download_manifest(id):
     apk = ApkFile.query.get(id) 
     return send_file(apk.report.manifest_file_path)
 
-@views.route('/download/patterns_template')
+@views_bp.route('/download/patterns_template')
 def download_patterns_template():
     return send_file('/storage/patterns.csv')
 
-@views.route('/download/yara_rules')
+@views_bp.route('/download/yara_rules')
 def download_yara_rules():
     return send_file('/storage/yara_rules/apksneeze.yar')
 
-@views.route('/')
+@views_bp.route('/')
 def index():
     return render_template('index.html')
 
 ### FOR DEVELOPMENT PURPOSES
-# @views.route('/clear_all')
+# @views_bp.route('/clear_all')
 # def clear_db():
 #     meta = db.metadata
 #     for table in reversed(meta.sorted_tables):
@@ -62,7 +63,7 @@ def index():
 #     return redirect('/')
 ##########
 
-@views.route("/tasks/<job_key>", methods=['GET'])
+@views_bp.route("/tasks/<job_key>", methods=['GET'])
 def get_results(job_key):
     job = Job.fetch(job_key, connection=app.redis)
 
@@ -74,7 +75,7 @@ def get_results(job_key):
 ################    
 ######
 # Handle file submitted for analysis
-@views.route('/analysis', methods=['POST'])
+@views_bp.route('/analysis', methods=['POST'])
 def analysis():
     if 'file' not in request.files:
             flash('No file', 'warning')
@@ -131,12 +132,12 @@ def analysis():
     db.session.commit()
     return redirect('/analysis')
 
-@views.route('/analysis', methods=['GET'])
+@views_bp.route('/analysis', methods=['GET'])
 def dashboard():
     apks = ApkFile.query.order_by(ApkFile.created_at).all()
     return render_template('dashboard.html', apks=apks)
 
-@views.route("/report/<id>/delete", methods=["GET"])
+@views_bp.route("/report/<id>/delete", methods=["GET"])
 def delete_report(id):
     delete_apk = ApkFile.query.get(id)
     db.session.delete(delete_apk)
@@ -146,7 +147,7 @@ def delete_report(id):
 
 ######
 # Reports page showing results of analysis
-@views.route('/report/<id>', methods=['GET'])
+@views_bp.route('/report/<id>', methods=['GET'])
 def show_report(id):
     apk = ApkFile.query.get(id)
     patterns = [p.pattern for p in db.session.query(DString).filter(
@@ -180,12 +181,12 @@ def show_report(id):
     
     return render_template('report.html', apk=apk, strings=strings, yara_code_matches=code_matches, yara_apk_matches=apk_matches)
 
-@views.route('/report/<id>/strings', methods=['GET'])
+@views_bp.route('/report/<id>/strings', methods=['GET'])
 def show_strings(id):
     apk = ApkFile.query.get(id)
     return render_template('strings_show.html', apk=apk)
 
-@views.route('/report/<id>/yara/code/show', methods=['GET'])
+@views_bp.route('/report/<id>/yara/code/show', methods=['GET'])
 def show_yara_code(id):
     apk = ApkFile.query.get(id)
     results = db.session.query(YaraMatch).filter(
@@ -193,7 +194,7 @@ def show_yara_code(id):
                 YaraMatch.code_scan==True).all()
     return render_template('yara_show.html', apk=apk, matches = results)
 
-@views.route('/report/<id>/yara/apk/show', methods=['GET'])
+@views_bp.route('/report/<id>/yara/apk/show', methods=['GET'])
 def show_yara_apk(id):
     apk = ApkFile.query.get(id)
     results = db.session.query(YaraMatch).filter(
@@ -201,26 +202,28 @@ def show_yara_apk(id):
                 YaraMatch.apk_scan==True).all()
     return render_template('yara_show.html', apk=apk, matches = results)
 
-@views.route('/run_yara/<id>', methods=['GET'])
-def run_yara(id):
+@views_bp.route('/report/yara/code/show/file', methods=['POST'])
+def yara_show_code():
+    id = request.form.get('id')
+    filepath = request.form.get('filepath')
+
     apk = ApkFile.query.get(id)
-    files_loc = os.path.join(app.config['UPLOAD_FOLDER'], apk.codename.replace(' ','_'))
-    rules_path = "/storage/yara_rules/apksneeze.yar"
-    rules = yara.compile(rules_path)
-    scans = []
-    for root, dirs, files in os.walk(files_loc):
-     for file in files:
-        with open(os.path.join(root, file), "rb") as f:
-            matches = rules.match(data=f.read())
-        scans.append([os.path.join(root, file), matches])
-    return render_template('yara.html', apk=apk, yara_scans=scans)
+    code = None
+    exts = ('.java', '.kt', '.xml', '.txt', '.properties')
+    if filepath.endswith(exts):
+        with open(filepath, 'r') as f:
+            code = f.read().splitlines()
+        lang=filepath.split('.')[-1]
+        return render_template('yara_show_code.html', apk=apk, filepath=filepath, code=code, lang=lang)
+    else:
+        return send_file(filepath)
     
-@views.route('/config/grep', methods=['GET'])
+@views_bp.route('/config/grep', methods=['GET'])
 def grep_conf():
     s_patterns = StringPattern.query.all()
     return render_template('grep_conf.html', string_patterns=s_patterns)
 
-@views.route('/config/grep', methods=['POST'])
+@views_bp.route('/config/grep', methods=['POST'])
 def upload_new_grep_patterns():
     if 'file' not in request.files:
             flash('No file', 'warning')
@@ -253,15 +256,15 @@ def upload_new_grep_patterns():
     flash('Patterns Updated', 'success')
     return render_template('grep_conf.html', string_patterns=s_patterns)
 
-@views.route('/config/yara', methods=['GET'])
+@views_bp.route('/config/yara', methods=['GET'])
 def yara_conf():
-    print(app.config['YARA_RULES'], flush=True)
+    # print(app.config['YARA_RULES'], flush=True)
     data = None
     with open(app.config['YARA_RULES'], 'r') as f:
         data = f.read().splitlines()
     return render_template('yara_conf.html', rules=data)
 
-@views.route('/config/yara', methods=['POST'])
+@views_bp.route('/config/yara', methods=['POST'])
 def yara_conf_upload():
     if 'file' not in request.files:
             flash('No file', 'warning')
