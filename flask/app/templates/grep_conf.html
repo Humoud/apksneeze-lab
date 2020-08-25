@@ -33,7 +33,7 @@
         </div>
         <div class="container">
             <h3>Upload Custom Patterns</h3>
-            <p>Use the provided patterns.csv file as a template. Format is pattern_name,pattern</p><a href="{{ url_for('download_patterns_template') }}">download patterns.csv</a></div>
+            <p>Use the provided patterns.csv file as a template. Format is pattern_name,pattern</p><a href="{{ url_for('views.download_patterns_template') }}">download patterns.csv</a></div>
         <div class="container">
             <form id="file-form" method="post" action="/config/grep" enctype="multipart/form-data">
                 <input name="file" required="" type="file">

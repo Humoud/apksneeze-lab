@@ -34,7 +34,7 @@
                         <tr>
                             <td>{{ apk.name }}</td>
                             {% if apk.analyzed %}
-                                <td><a class="btn btn-primary btn-circle ml-1" href="{{ url_for('show_report', id=apk.id) }}" role="button"><i class="fas fa-check text-white"></i></a></td>
+                                <td><a class="btn btn-primary btn-circle ml-1" href="{{ url_for('views.show_report', id=apk.id) }}" role="button"><i class="fas fa-check text-white"></i></a></td>
                             {% else %}
                                 <td>Please wait</td>
                                 <script>
@@ -57,7 +57,7 @@
                             {% endif %}
                             <td>{{ apk.codename }}</td>
                             <td>{{ apk.created_at.strftime('%Y-%m-%d %X') }}</td>
-                            <td><a class="btn btn-danger btn-circle ml-1" href="{{ url_for('delete_report', id=apk.id) }}" role="button"><i class="fas fa-trash text-white"></i></a></td>
+                            <td><a class="btn btn-danger btn-circle ml-1" href="{{ url_for('views.delete_report', id=apk.id) }}" role="button"><i class="fas fa-trash text-white"></i></a></td>
                             <td></td>
                         </tr>
                         {% endfor %}

@@ -5,9 +5,9 @@
     <div id="content">
         <div class="container">
             <h1>Report</h1>
-            <h2>{{ apk.name }}</h2><a href="{{ url_for('download_sample', id=apk.id) }}" class="btn btn-secondary" type="button">Get sample</a><a href="{{ url_for('download_zip_file', id=apk.id) }}" class="btn btn-primary" type="button" style="margin: 2px;">Get decompiled code</a><!-- <button class="btn btn-primary" type="button">Get Jar</button> -->
+            <h2>{{ apk.name }}</h2><a href="{{ url_for('views.download_sample', id=apk.id) }}" class="btn btn-secondary" type="button">Get sample</a><a href="{{ url_for('views.download_zip_file', id=apk.id) }}" class="btn btn-primary" type="button" style="margin: 2px;">Get decompiled code</a><!-- <button class="btn btn-primary" type="button">Get Jar</button> -->
             <a
-                class="btn btn-danger btn-icon-split" href="{{ url_for('delete_report', id=apk.id) }}" role="button" style="margin-left: 2px;"><span class="text-white-50 icon"><i class="fas fa-trash"></i></span><span class="text-white text">Delete</span></a>
+                class="btn btn-danger btn-icon-split" href="{{ url_for('views.delete_report', id=apk.id) }}" role="button" style="margin-left: 2px;"><span class="text-white-50 icon"><i class="fas fa-trash"></i></span><span class="text-white text">Delete</span></a>
                 <div class="table-responsive">
                     <table class="table table-sm">
                         <tbody>
@@ -32,7 +32,7 @@
                 </div>
         </div>
         <div class="container">
-            <h3>Manifest File</h3><a class="btn btn-primary" type="button" style="margin-bottom: 2px;" href="{{ url_for('download_manifest', id=apk.id) }}">Open manifest file</a>
+            <h3>Manifest File</h3><a class="btn btn-primary" type="button" style="margin-bottom: 2px;" href="{{ url_for('views.download_manifest', id=apk.id) }}">Open manifest file</a>
             <div class="table-responsive">
                 <table class="table table-sm">
                     <tbody>
@@ -88,7 +88,7 @@
         <div class="container">
             <h3>Strings</h3>
             {% if strings %}
-            <a href="{{ url_for('show_strings', id=apk.id) }}" class="btn btn-primary" type="button" style="margin-bottom: 2px;">Full View (includes hits)</a>
+            <a href="{{ url_for('views.show_strings', id=apk.id) }}" class="btn btn-primary" type="button" style="margin-bottom: 2px;">Full View (includes hits)</a>
             <div class="table-responsive">
                 <table class="table table-sm">
                     <thead>
@@ -114,7 +114,7 @@
         <div class="container">
             <h3>Yara <small>decompiled code scan</small></h3>
             {% if yara_code_matches %}
-            <a href="{{ url_for('show_yara_code', id=apk.id) }}" class="btn btn-primary" type="button" style="margin-bottom: 2px;">View Full</a>
+            <a href="{{ url_for('views.show_yara_code', id=apk.id) }}" class="btn btn-primary" type="button" style="margin-bottom: 2px;">View Full</a>
             <div class="table-responsive">
                 <table class="table table-sm">
                     <thead>
@@ -140,7 +140,7 @@
         <div class="container">
             <h3>Yara <small>apk file scan</small></h3>
             {% if yara_apk_matches %}
-            <a href="{{ url_for('show_yara_apk', id=apk.id) }}" class="btn btn-primary" type="button" style="margin-bottom: 2px;">View Full</a href="{{ url_for('download_sample', id=apk.id) }}">
+            <a href="{{ url_for('views.show_yara_apk', id=apk.id) }}" class="btn btn-primary" type="button" style="margin-bottom: 2px;">View Full</a href="{{ url_for('views.download_sample', id=apk.id) }}">
             <div class="table-responsive">
                 <table class="table table-sm">
                     <thead>
