@@ -16,11 +16,11 @@ Current features:
 
 Run docker compose to build the images and run the project.:
 
-`docker-compose -f local.yml`
+`docker-compose -f local.yml up`
 
 Or run it as daemon:
 
-`docker-compose -f local.yml -d`
+`docker-compose -f local.yml up -d`
 
 Once the docker images are built and the containers are running, two things must be done:
 
