@@ -8,21 +8,19 @@ Current features:
 3. Scan apk file or decompiled code with Yara
 4. View in browser specific files that matched a yara rule or download them
 4. Grep decompiled files for specific grep patterns
-5. Parse/detect permissions and service in manifest files
+5. Parse/detect permissions and services in manifest files
 6. Download manifest files
-7. configure grep patterns and yara rules
+7. Configure grep patterns and yara rules
 
 ## Usage
 
-Run project:
+Run docker compose to build the images and run the project.:
 
 `docker-compose -f local.yml`
 
-Or as daemon:
+Or run it as daemon:
 
 `docker-compose -f local.yml -d`
-
-Then visit: `http://localhost:5000`
 
 Once the docker images are built and the containers are running, two things must be done:
 
@@ -34,12 +32,16 @@ Once the docker images are built and the containers are running, two things must
 
 `docker-compose -f local.yml exec flask flask apksneeze seed`
 
-If you want to clear the DB (exluding string patterns) you can issue a GET request to path: `/clear_all`
+Then visit: `http://localhost:5000` to use the app.
+
+If you want to clear the DB (excluding string patterns) you can issue a GET request to path: `/clear_all`
 
 ## Modifying Code
 You can modify code on the fly since the code volume is mounted  on both the web app and the worker, plus the project is running in debug mode.
 
 ## Screenshots
+Here are some screenshot of running the tool against the injured android app developed by B3nac https://github.com/B3nac/InjuredAndroid. Many thanks to B3nac for this app!
+
 Index page
 
 <img src="screenshots/index.png" width="500" height="400">
@@ -78,6 +80,6 @@ Grep patterns configuration:
 
 
 ## Disclaimer
-I do not recommend running this in production or any corporate environment. This is to be treated as a tool with similar capabilities as a terminal. Example, you can see the way that the grep patterns are being imported and used, it is very dangerous as it can be easily abused. Make sure that you know what you are doing.
+Just in case: I do not recommend running this in production or on sensitive machines for obvious reasons (look at the code, it can easily be abused). Launch it on a lab/test machine, do analysis, close it.
 
 Usage of APKSneeze Lab for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program.
