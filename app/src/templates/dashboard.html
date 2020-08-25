@@ -36,7 +36,7 @@
                             {% if apk.analyzed %}
                                 <td><a class="btn btn-primary btn-circle ml-1" href="{{ url_for('show_report', id=apk.id) }}" role="button"><i class="fas fa-check text-white"></i></a></td>
                             {% else %}
-                                <td><a class="btn btn-secondary btn-circle ml-1" role="button">Please wait</a></td>
+                                <td>Please wait</td>
                                 <script>
                                     function getTaskStatus(){
                                         $.ajax({
