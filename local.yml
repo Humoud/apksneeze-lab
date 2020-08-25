@@ -10,15 +10,29 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - "./app/src:/flask/app"
-      - "./app/storage:/storage"
+      - "./flask/:/flask/"
+      - "./storage:/storage"
     depends_on:
+      - redis
+      - postgres
+    
+  worker:
+    build:
+      context: .
+      dockerfile: ./compose/worker/Dockerfile
+    image: apksneeze_worker
+    container_name: apksneeze_worker
+    env_file: ./.env/.postgres
+    volumes:
+      - "./storage:/storage"
+    depends_on:
+      - flask
       - redis
       - postgres
 
   redis:
     image: redis:6.0.6-buster
-    container_name: redis
+    container_name: apksneeze_redis
   
   postgres:
     build:

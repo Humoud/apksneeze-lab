@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>APKSneeze Dashboard</h1>
+{% if apks|length < 1 %}
+<p>No APK Files Were Submitted For Analysis.</p>
+{% else %}
+<table class="table table-hover">
+  <thead class="thead-dark">
+    <tr>
+      <th>APK File</th>
+      <th>Codename</th>
+      <th>Added</th>
+      <th>Analyzed</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for apk in apks %}
+    <tr>
+      <!-- <td><a href="{{ url_for('uploaded_file', filename=apk.name) }}">{{ apk.name }}</a></td> -->
+      <td><a href="{{ url_for('show_report', id=apk.id) }}">{{ apk.name }}</a></td>
+      <td>{{ apk.codename }}</td>
+      <td>{{ apk.created_at.date() }}</td>
+      <td>{{ apk.analyzed }}</td>
+      <td></td>
+      <td><a href="{{ url_for('delete_report', id=apk.id) }}">Delete</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<form action="/" method="POST" enctype=multipart/form-data>
+  <div class="input-group mb-3">
+    <div class="custom-file">
+      <input type="file" name="file" class="custom-file-input" id="inputGroupFile02">
+      <label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Choose file</label>
+    </div>
+    <div class="input-group-append">
+      <button type="submit" class="input-group-text" id="inputGroupFileAddon02">Upload</button>
+    </div>
+  </div>
+  <script>
+    $('#inputGroupFile02').on('change',function(){
+        //get the file name
+        var fileName = $(this).val();
+        //replace the "Choose a file" label
+        $(this).next('.custom-file-label').html(fileName);
+    })
+</script>
+</form>
+{% endblock content %}
