@@ -12,14 +12,13 @@ db_blueprint = Blueprint('seed', __name__)
 def seed_db():
     """ Seed Database """
     patterns_list=[]
-    with open('static/templates/patterns.csv') as csv_file:
+    with open('/storage/patterns.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         line_count = 0
         for row in csv_reader:
             if line_count == 0:
                 line_count += 1
             else:
-                # line_count += 1
                 print("Adding Grep pattern: {}".format(row[0]))
                 sp = StringPattern(name=row[0],pattern=row[1],cmd_switches=row[2])
                 patterns_list.append(sp)
