@@ -16,7 +16,7 @@ def create_app():
     flask_app.config['YARA_COMPILED'] = config.YARA_COMPILED_PATH
     flask_app.config['REDIS_URL'] = 'redis://redis:6379'
     flask_app.redis = Redis.from_url(flask_app.config['REDIS_URL'])
-    flask_app.task_queue = rq.Queue(connection=flask_app.redis)
+    flask_app.task_queue = rq.Queue(connection=flask_app.redis, default_timeout=3600)
 
     flask_app.app_context().push()
     db.init_app(flask_app)

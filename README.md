@@ -34,6 +34,7 @@ Once the docker images are built and the containers are running, two things must
 
 `docker-compose -f local.yml exec flask flask apksneeze seed`
 
+If you want to clear the DB (exluding string patterns) you can issue a GET request to path: `/clear_all`
 
 ## Modifying Code
 You can modify code on the fly since the code volume is mounted  on both the web app and the worker, plus the project is running in debug mode.
