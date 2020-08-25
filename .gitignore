@@ -3,7 +3,7 @@
 *.apk
 app/src/migrations
 # ignore everything in storage directory
-app/storage/*
+storage/*
 
 !storage/yara_rules/apksneeze.yar
 !storage/patterns.csv
