@@ -12,8 +12,6 @@ Current features:
 6. Download manifest files
 7. Configure grep patterns and yara rules
 
-Note that file hashes, apk file sizes, yara rule matches, and grep matches are all stored in a postgresql DB running on one of the docker containers. Also, decompiled files and uploaded apks are stored in the `/storage` directory. The more you use this project, the more data you will accumulate. After that you can get creative with that data.
-
 ## Requirements & Usage
 
 The project runs on docker containers. Make sure you have docker and docker-compose installed:
@@ -89,6 +87,10 @@ The project uses 4 docker containers:
 3. Redis
 4. Postgres
 
+## Notes
+File hashes, apk file sizes, yara rule matches, and grep matches are all stored in a postgresql DB running on one of the docker containers. Also, decompiled files and uploaded apks are stored in the `/storage` directory. The more you use this project, the more data you will accumulate. After that you can get creative with that data.
+
+The worker currenly uses the same code that the flask app is using, perhaps reducing the code and depedencies will result in a lighter image.
 
 ## Disclaimer
 Just in case: I do not recommend running this in production or on sensitive machines for obvious reasons (look at the code, it can easily be abused). Launch it on a lab/test machine, do analysis, close it.
