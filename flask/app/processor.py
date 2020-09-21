@@ -69,7 +69,7 @@ def analyze_manifest(report, code_loc):
             report.permissions.append(perm)
             perms.append(perm)
         # services
-        if isinstance(doc['manifest']['application']['service'], dict):
+        if 'service' in doc['manifest']['application']:
             for key, value in doc['manifest']['application']['service'].items():
                 if key == '@android:name':
                     svc = Service(value=value)
