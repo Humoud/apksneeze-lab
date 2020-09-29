@@ -70,11 +70,12 @@ def analyze_manifest(report, code_loc):
             perms.append(perm)
         # services
         if 'service' in doc['manifest']['application']:
-            for key, value in doc['manifest']['application']['service'].items():
-                if key == '@android:name':
-                    svc = Service(value=value)
-                    report.services.append(svc)
-                    svcs.append(svc)
+            for entry in doc['manifest']['application']['service']:
+                for key, value in entry.items():
+                    if key == '@android:name':
+                        svc = Service(value=value)
+                        report.services.append(svc)
+                        svcs.append(svc)
 
     # bulk DB insert
     db.session.add_all(perms)
